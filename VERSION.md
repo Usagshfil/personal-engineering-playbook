@@ -1,8 +1,8 @@
 # Framework Version Specification
 
-**Current Version**: `1.0.0-alpha.1`  
+**Current Version**: `1.0.0-rc.1`  
 **Release Date**: 2026-11-03  
-**Status**: Initial Architecture & Universal Standards Release  
+**Status**: Release Candidate 1 — Verified Project-Ready Framework  
 
 ---
 

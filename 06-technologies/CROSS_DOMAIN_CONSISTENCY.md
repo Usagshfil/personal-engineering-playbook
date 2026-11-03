@@ -11,16 +11,54 @@ When building distributed systems across multiple technology tiers (Web, Mobile,
 
 To eliminate ambiguous responsibility, duplicate validation bugs, and security vulnerabilities, the playbook establishes the **Principle of Single Authoritative Ownership**: for every system concern, exactly one layer owns the immutable, authoritative decision. All other layers act as convenient UX accelerators or secondary consumers.
 
-| Architectural Concern | Authoritative Decision Owner | Secondary / Downstream Consumers | Cross-Tier Enforcement Contract |
-| :--- | :--- | :--- | :--- |
-| **Data Integrity Constraints** | **Relational Database** | Backend Services, Client Forms | Database enforces durable check constraints, unique indexes, and foreign keys. Client/Backend validation prevents bad requests from reaching disk, but the database is the final, unbypassable gate. |
-| **Request Schema Validation** | **Backend API Boundary** | Web & Android Clients | Backend parses incoming JSON against strict schemas (Zod, Go Validator) and fails fast with HTTP 400/422. Client validation exists solely for user feedback and UX fluidity. |
-| **Business Transaction Boundaries** | **Backend Application Service** | Database (Local ACID), Workers | Application Service orchestrates the **Unit of Work**. It starts, commits, or rolls back local database transactions and queues asynchronous side effects via the Transactional Outbox. |
-| **Object-Level Authorization (BOLA/IDOR)** | **Backend Domain Logic** | Client Presentation | Backend verifies that the authenticated `subject_id` possesses ownership or tenant rights over the target `resource_id`. Client UI hides inaccessible buttons but is never trusted for security. |
-| **Authentication & Session State** | **Backend Auth Server / IDP** | Mobile Keystore, Web HttpOnly Cookie | Backend issues signed JWTs and tracks refresh token families in persistent storage. Clients store tokens securely but cannot alter or extend session validity independently. |
-| **Audit Ledger & Compliance Logs** | **Database Append-Only Ledger** | APM Tracing, Log Collectors | Tamper-evident `audit_ledger` table records business-critical state changes within the same transaction. Application JSON logs record operational diagnostics. |
-| **Timeout & Deadline Hierarchy** | **Client / Upstream Ingress** | Downstream HTTP, Database Driver | Upstream client establishes the global timeout budget. Each downstream tier consumes a strictly smaller deadline, preventing zombie queries after client abandonment. |
-| **Entity State Caching** | **Application Service / Redis** | Web TanStack Query, Android Room | Backend manages cache invalidation (TTL, write-through). Clients maintain localized read replicas for offline access or optimistic UI rendering. |
+### The 4-Dimensional Ownership & Enforcement Matrix
+
+| Architectural Concern | Policy Owner (Rule Authority) | Source of Truth (Authoritative State) | Enforcement Layer(s) (Defense-in-Depth) | Validation & Enforcement Responsibilities Across Tiers |
+| :--- | :--- | :--- | :--- | :--- |
+| **Data Integrity & Relational Invariants** | Domain Architect & Data Governance Lead | Relational Database Engine (`PostgreSQL 16+`) | Client UX (advisory) $\to$ Backend DTOs (fail-fast) $\to$ Domain Entities $\to$ Database Constraints (authoritative) | **Client**: Instant user feedback; **Gateway**: Payload envelope limits; **Backend**: Contextual business invariant validation; **Database**: Final durable `CHECK`, `UNIQUE`, `FOREIGN KEY`, and `NOT NULL` constraints. |
+| **Request Schema & Boundary Serialization** | API Platform Lead & Backend Architect | OpenAPI 3.1 Contract / Strict Schema (Zod / Go Validator) | Client Form Parsers (UX) $\to$ Reverse Proxy / Gateway $\to$ Backend Controller (authoritative) | **Client**: Guides input entry; **Gateway**: Drops malformed JSON transport envelopes; **Backend**: Strict parsing (`.strict()`), fails fast with RFC 9457 (400/422), suppresses raw internal stack traces. |
+| **Business Transaction Boundaries & Atomicity** | Domain / Application Architect | Backend Application Service (Unit of Work) | Backend Application Service $\to$ Database Local ACID Engine $\to$ Transactional Outbox | **Client**: Supplies mutation intent with `Idempotency-Key`; **Service**: Orchestrates Unit of Work, manages connection leases, locks aggregates; **Database**: Commits atomic ACID transaction; **Worker**: Dispatches outbox events. |
+| **Object-Level Authorization (BOLA/IDOR)** | Product Security & Access Governance | Identity Provider (JWKS) & Authorization Store (RBAC/ABAC) | Client UI State (visual gating) $\to$ Gateway Token Introspection $\to$ Service Domain Logic (authoritative) | **Client**: Conditionally renders UI actions (zero security guarantee); **Gateway**: Authenticates JWT signatures; **Service**: Verifies `subject_id` owns or is permitted on target `resource_id` before invoking database. |
+| **Authentication, Token Lifecycle & Sessions** | Information Security Officer (CISO) & Identity Architect | Central Identity Provider / PostgreSQL `refresh_token_families` | Client Secure Vault $\to$ Backend Auth Controller $\to$ Database Token Family Table | **Client**: Stores tokens in Android KeyStore or `HttpOnly; Secure; SameSite=Strict` cookies; **Auth Service**: Verifies cryptographic signatures and single-use rotation; **Database**: Tracks token-family state machines. |
+| **Audit Ledger & Regulatory Compliance** | Legal, Compliance & SecOps | Relational Database Append-Only `audit_ledger` Table | Backend Service $\to$ Database Local ACID Transaction $\to$ SIEM / APM Tracing | **Service**: Captures actor context, sanitizes PII, computes delta; **Database**: Atomically commits append-only `audit_ledger` entry; **APM**: Retains operational distributed traces (`traceparent`). |
+| **Timeout & Deadline Hierarchy** | Systems Reliability & Platform Lead | Upstream Ingress / Client Request Origin | Client HTTP Client $\to$ API Gateway $\to$ Application Worker $\to$ Database Engine | **Client**: Sets global budget (5.0s); **Gateway**: Ingress deadline (4.0s) & propagates `X-Request-Deadline`; **Service**: Propagates cancellation; **Database**: `statement_timeout` (2.0s) & cancels active query on client disconnect. |
+| **Entity State Caching & Invalidation** | Application Architecture & Performance Lead | Primary Database (state) + Redis (authoritative cache store) | Backend Write-Through Service $\to$ Redis Cache $\to$ Client Store (TanStack/Room) | **Backend**: Updates cache write-through/invalidation (TTL); **Redis**: Serves high-throughput read hits; **Client**: Maintains transient local cache for offline fluidity and optimistic UI rendering. |
+
+### 1.1 The Distributed Enforcement Model & Defense-in-Depth
+
+A critical pitfall in multi-tier architecture is confusing **Single Source of Truth** with **Single Point of Enforcement**:
+* **Single Source of Truth** mandates that only *one* component holds final authority over an invariant. The relational database holds final authority over relational consistency; the service layer holds final authority over domain state transitions.
+* **Defense-in-Depth Enforcement** requires *multiple* layers to inspect requests along the execution pipeline. Having the client validate email formatting does not duplicate database authority—it improves user experience by eliminating a 200ms network round-trip. Having the API Gateway throttle unauthenticated IPs does not replace application authorization—it shields the database connection pool from volumetric exhaustion.
+
+```mermaid
+flowchart TD
+    subgraph Client ["Tier 3: Client UX Layer"]
+        C1["Instant Form Feedback (Zod / Compose)"]
+        C2["Visual Action Gating (Hide Unauthorized Buttons)"]
+    end
+
+    subgraph Gateway ["Tier 2: Ingress & Reverse Proxy"]
+        G1["TLS 1.3 Termination & DDoS Throttling"]
+        G2["Request Size Limiting & Basic Structural Inspection"]
+        G3["Traceparent & Deadline Header Injection"]
+    end
+
+    subgraph Service ["Tier 2: Application Service Layer"]
+        S1["Strict Schema Parsing (.strict() Fail-Fast)"]
+        S2["Object-Level Authorization (BOLA/IDOR Check)"]
+        S3["Domain State Invariants & Unit of Work Orchestration"]
+    end
+
+    subgraph Database ["Tier 2: Relational Database Engine"]
+        D1["Durable Constraints (CHECK, FK, UNIQUE, NOT NULL)"]
+        D2["Pessimistic Row Locking & Serializable Isolation"]
+        D3["Append-Only Business Audit Ledger Insertion"]
+    end
+
+    Client --> Gateway
+    Gateway --> Service
+    Service --> Database
+```
 
 ---
 
@@ -33,10 +71,40 @@ A system composed of individually reasonable technology-specific defaults can fa
 | **Network Request Timeouts** | OkHttp: 30s read/write | Axios/Fetch: 10–15s | Axios/Undici: 5–10s | Statement: 5–10s | **Unified Deadline Budget**: Mobile/Web Client = 5.0s, Backend Ingress = 4.0s, DB Statement = 2.0s, Downstream HTTP = 1.5s. Eliminates wasted DB execution after client drops. |
 | **Error Response Format** | Kotlin Exception / Result | Axios Error / ErrorBoundary | RFC 9457 Problem Details | SQLSTATE / Postgres Error Codes | **RFC 9457 Problem Details (`application/problem+json`)**: Backend intercepts SQLSTATE/Domain errors and maps them to standard JSON (`type`, `title`, `status`, `detail`, `instance`, `code`). Database schema names and raw SQL are strictly suppressed. |
 | **Auth Token Lifespans** | Android Keystore | Browser Memory / Cookie | Access: $\le 15\text{m}$, Refresh: 7–30d | Token Family Table | **Coordinated Token Lifecycle**: Access token = 15m (stateless verification via JWKS). Refresh token = 7d (stateful, single-use, rotating). Client refresh grace period = 30s for concurrent mobile requests. |
-| **Monetary Precision** | Kotlin `BigDecimal` or Cents | TS `number` / `BigInt` | TS `bigint` / Zod | Postgres `BIGINT` / `NUMERIC` | **Explicit Minor Units Pattern**: Store integer minor units (`BIGINT`) with ISO 4217 currency code and explicit scale (USD = 2, JPY = 0, KWD = 3). Use `NUMERIC(p,s)` for fractional rates. Enforce Banker's Rounding (Half-Even). |
+| **Monetary Precision & Rounding** | Kotlin `BigDecimal` or Cents | TS `number` / `BigInt` | TS `bigint` / Zod | Postgres `BIGINT` / `NUMERIC` | **Explicit Minor Units & Domain Rounding**: Store integer minor units (`BIGINT`) with ISO 4217 currency code and explicit scale (USD = 2, JPY = 0, KWD = 3). Use `NUMERIC(28,8)` for intermediate calculations. Rounding mode is a business/regulatory rule (Banker's vs Half-Up), executed strictly at boundary. |
 | **Timestamp Semantics** | `java.time.Instant` | ISO-8601 String / `Date` | UTC ISO-8601 String | `TIMESTAMPTZ` (UTC) | **Semantic Timestamp Separation**: System events & audit ledgers = `TIMESTAMPTZ` (UTC instant). Real-world calendar appointments = Local wall-clock timestamp + explicit IANA timezone name. Display conversion occurs at edge. |
 | **Mutation Idempotency** | UUID header | UUID header | SHA-256 fingerprint check | Unique constraint on key | **Effectively-Once Mutation**: Client sends `Idempotency-Key: <UUIDv7>`. Backend records payload hash (SHA-256) and caches response for 24h. Database enforces unique constraint `(org_id, idempotency_key)`. |
 | **Retry Backoff & Jitter** | Exponential (3 retries) | React Query: 3 retries | Exponential with jitter | Driver connection retry | **Full Jitter Exponential Backoff**: Retries permitted only on idempotent operations (GET, PUT, DELETE) or network disconnects. Max 3 retries with random full jitter ($t = \text{random}(0, \min(M, B \times 2^i))$). |
+
+### 2.1 Financial Rounding Policy & Regulatory Nuance Standard
+
+A frequent architectural failure is treating financial rounding as an arbitrary engineering choice. Rounding is a **legal, regulatory, and business domain rule** that must be explicitly governed:
+
+1. **Banker's Rounding (`ROUND_HALF_EVEN`)**:
+   * *Mechanism*: Rounds half-way values to the nearest even number (e.g., $2.5 \to 2$, $3.5 \to 4$).
+   * *Domain Application*: High-volume financial transactions, statistical calculations, foreign exchange trading, and general ledger reconciliation. It eliminates the upward statistical bias inherent in commercial rounding over millions of transactions.
+2. **Commercial / Retail Tax Rounding (`ROUND_HALF_UP`)**:
+   * *Mechanism*: Rounds half-way values away from zero (e.g., $2.5 \to 3$, $3.5 \to 4$).
+   * *Domain Application*: Consumer sales tax, VAT invoicing, and retail receipts where statutory law explicitly mandates commercial rounding (e.g., UK HMRC VAT Notice 700, IRS retail guidelines, and EU VAT Directive 2006/112/EC).
+3. **The Pipeline Rounding Stage Invariant**:
+   * **Intermediate Calculations**: `MUST NEVER` apply premature rounding. Retain full precision throughout the pipeline using `NUMERIC(28, 8)` in PostgreSQL, `BigDecimal` in Kotlin/Java, or high-precision decimal libraries in TypeScript.
+   * **Boundary Execution**: Rounding `MUST` occur exactly once: at the final customer display, invoice generation, or statutory ledger posting boundary.
+
+```
++----------------------------------------------------------------------------------+
+|                            CALCULATION PIPELINE                                  |
+|                                                                                  |
+|  Item Price (cents): 1250 ($12.50)                                               |
+|  Quantity: 3                                                                     |
+|  Tax Rate: 8.875%                                                                |
+|                                                                                  |
+|  1. Subtotal:              1250 * 3 = 3750 ($37.50)                              |
+|  2. Unrounded Tax:         3750 * 0.08875 = 332.8125 cents (Retained in full)    |
+|  3. Final Boundary Round:  Tax Authority specifies ROUND_HALF_UP                |
+|                            332.8125 -> 333 cents ($3.33)                         |
+|  4. Durable Persistence:   Record integer 3750, integer 333, Total: 4083 cents   |
++----------------------------------------------------------------------------------+
+```
 
 ---
 
@@ -83,6 +151,74 @@ To guarantee consistency across system boundaries, all asynchronous side effects
 2.  **Zero Network Calls Inside DB Transactions**: External HTTP calls, messaging publishes, and email transmissions are strictly forbidden inside `BEGIN ... COMMIT` blocks.
 3.  **Outbox Poller / CDC Worker**: A separate background worker reads unpublished outbox rows using `SELECT ... FOR UPDATE SKIP LOCKED`, dispatches them over the network with an explicit timeout, and deletes or marks them published upon confirmation.
 4.  **Idempotent Downstream Receivers**: Network messages may be delivered more than once during worker crashes. All downstream consumers `MUST` enforce deduplication using message IDs or entity version checks.
+
+### 3.1 Real-World Operational Realities & Failure Modes of the Outbox
+
+While the theoretical pattern is simple, production outbox implementations face five distinct operational failure modes that must be proactively mitigated:
+
+```
++-------------------------------------------------------------------------------------------------------+
+|                                    OUTBOX OPERATIONAL LIFECYCLE                                       |
+|                                                                                                       |
+|  [Business TX] --> (INSERT outbox_events)                                                             |
+|                          |                                                                            |
+|                          v                                                                            |
+|  [Poller Worker] -> (SELECT ... FOR UPDATE SKIP LOCKED WHERE status = 'PENDING' ORDER BY id ASC)      |
+|                          |                                                                            |
+|                          +--> (Network Dispatch: Kafka / SQS / Webhook)                               |
+|                                    |                                                                  |
+|               +--------------------+---------------------+                                            |
+|               | (Success)                                | (Failure)                                  |
+|               v                                          v                                            |
+|        [UPDATE status = 'PUBLISHED']              [Increment retry_count]                             |
+|        [Set published_at = NOW()]                 [Backoff: 2^n * base_ms]                            |
+|               |                                          |                                            |
+|               v                                          +--> (If retry_count >= 5)                   |
+|        [Archival / Pruning Job]                                      |                                |
+|        (Purge after 7 days)                                          v                                |
+|                                                               [UPDATE status = 'FAILED_DLQ']          |
+|                                                               [Fire P1 Alert to SecOps/SRE]           |
++-------------------------------------------------------------------------------------------------------+
+```
+
+1. **At-Least-Once Delivery & Worker Crash Window**:
+   * *The Problem*: A worker successfully dispatches an event to Stripe or Kafka, but crashes (or suffers a network disconnect) *before* committing the database transaction that updates the event to `PUBLISHED` or deletes it. When the worker recovers (or a peer worker takes over), it re-reads the event and dispatches it a second time.
+   * *Mitigation*: Systems cannot guarantee *exactly-once* delivery across network boundaries. Systems `MUST` accept *at-least-once* transport and enforce **Consumer Idempotency**.
+2. **Downstream Consumer Deduplication (The Inbox Pattern)**:
+   * *The Mechanism*: Every downstream message consumer `MUST` implement deduplication before applying domain logic.
+   * *Schema Enforcement*: Store processed event IDs in an append-only `processed_events` table within the consumer's local database transaction:
+     ```sql
+     CREATE TABLE processed_events (
+         event_id UUID PRIMARY KEY,
+         source_service TEXT NOT NULL,
+         processed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+     );
+     ```
+   * *Execution*: The consumer checks `INSERT INTO processed_events (event_id, source_service) VALUES ($1, $2) ON CONFLICT DO NOTHING`. If zero rows are inserted, the event is recognized as a duplicate and silently acknowledged without re-executing business side effects.
+3. **Message Ordering Guarantees via Partition Keys**:
+   * *The Problem*: Multi-threaded outbox workers pulling batches of events concurrently can process events out of order (e.g., dispatching `ORDER_CANCELLED` before `ORDER_CREATED` has completed).
+   * *The Rule*: Outbox rows `MUST` include a `partition_key` (typically the aggregate root UUID, e.g. `order_id` or `account_id`). Workers either route events to Kafka/SQS FIFO topics partitioned by this key, or enforce sequential row processing per `partition_key` so that all events for a single business entity are delivered strictly in timestamp order.
+4. **Poison Message Handling & Exponential Backoff / Dead-Letter Queue (DLQ)**:
+   * *The Problem*: If a single event payload is unparseable or rejected with a permanent `400 Bad Request` by a downstream API, a naive loop will retry indefinitely, blocking that partition's entire queue.
+   * *Mitigation*:
+     * Classify errors into **Transient** (503 Service Unavailable, network timeout) vs. **Permanent** (400 Bad Request, schema violation, invalid credentials).
+     * Permanent errors immediately transition to `FAILED_DLQ` without retries.
+     * Transient errors retry with exponential backoff and jitter up to a maximum limit (e.g., 5 attempts over 15 minutes). Once exhausted, the event transitions to `FAILED_DLQ` and triggers an actionable alert.
+5. **Automated Table Cleanup & Archival Policy**:
+   * *The Problem*: A high-throughput outbox table inserting millions of rows weekly suffers index bloat, vacuum degradation, and sequential scan slowdowns if historical records accumulate indefinitely.
+   * *Mitigation*:
+     * High-volume systems `MUST` partition the `outbox_events` table by day (`PARTITION BY RANGE (created_at)`), dropping partitions older than 7 or 14 days with zero lock overhead.
+     * Medium-volume systems `MUST` run a scheduled, throttled batch cleanup job during off-peak windows:
+       ```sql
+       -- Throttled cleanup query preventing lock escalation
+       DELETE FROM outbox_events
+       WHERE id IN (
+           SELECT id FROM outbox_events
+           WHERE status = 'PUBLISHED' 
+             AND published_at < CURRENT_TIMESTAMP - INTERVAL '7 days'
+           LIMIT 5000
+       );
+       ```
 
 ---
 
@@ -166,12 +302,49 @@ sequenceDiagram
     API-->>Client: 401 Unauthorized (Entire session family revoked!)
 ```
 
+### 5.1 Formal Token-Family State Machine
+
+A refresh token exists within a strictly governed lifecycle state machine designed to detect credential theft and token replays:
+
+```mermaid
+stateDiagram-v2
+    [*] --> ISSUED: Initial Login or Successful Refresh
+    ISSUED --> ACTIVE: Token delivered to client storage
+    ACTIVE --> CONSUMED: Rotated via /auth/refresh (Generates new ISSUED token)
+    ACTIVE --> REVOKED: Explicit user logout or security invalidation
+    CONSUMED --> REVOKED: Replay attack detected (Consumed token presented again)
+    REVOKED --> [*]: Entire token family invalidated; user re-auth required
+```
+
+| Lifecycle State | Description | Invariant & Permitted Transitions |
+| :--- | :--- | :--- |
+| **`ISSUED`** | Cryptographically generated token hash persisted in database; pending delivery to client. | Can transition only to `ACTIVE` upon successful HTTP response delivery, or expired if never acknowledged. |
+| **`ACTIVE`** | The single valid refresh token for the active user session family. | Can transition to `CONSUMED` via atomic rotation, or `REVOKED` via explicit logout. |
+| **`CONSUMED`** | Previously valid token that has been replaced by a successor token. | Retained for concurrency grace period. If presented after grace period or re-presented maliciously, triggers immediate family-wide revocation to `REVOKED`. |
+| **`REVOKED`** | Permanently invalidated token and family. | Terminal state. Any request presenting a revoked token returns HTTP 401 and logs a security audit event. |
+
+### 5.2 Concurrency Defense: Grace Periods vs. Atomic Database Advisory Locks
+
+In production systems, mobile clients frequently fire concurrent HTTP requests (e.g., initial screen load fetching profile, notifications, and dashboard data simultaneously). If the access token has expired, all three requests will concurrently attempt to refresh using the exact same refresh token. Systems must choose between two distinct concurrency architectures:
+
+1. **The Leeway Grace Period Approach (Standard for Mobile)**:
+   * *Mechanism*: When token $R_1$ is rotated to $R_2$, $R_1$ enters `CONSUMED` state but records a `grace_expires_at = CURRENT_TIMESTAMP + INTERVAL '30 seconds'`. If a concurrent request presents $R_1$ within that 30-second window, the server does not treat it as an attack; instead, it returns the *already-issued* $R_2$ and new access token.
+   * *Trade-Off & Security Risk*: Solves mobile network race conditions and dropped TCP ACK packets without client-side coordination. However, it creates a narrow **30-second window of vulnerability** during which a stolen token could theoretically be replayed alongside the legitimate user's request.
+2. **The Atomic Single-Flight / Database Advisory Lock Approach (Zero Replay Tolerance)**:
+   * *Mechanism*: The client enforces a local mutex/interceptor (e.g. OkHttp Authenticator or Axios interceptor) ensuring only one refresh request is dispatched over the wire at a time while other requests queue. Concurrently, the backend acquires an atomic advisory lock:
+     ```sql
+     -- Serializes refresh attempts for this specific family without table locks
+     SELECT pg_advisory_xact_lock(hashtext(family_id::text));
+     ```
+   * *Trade-Off*: Completely eliminates any replay vulnerability window. However, under high network jitter or client concurrency, connection pool holding times increase, and if a client drops mid-refresh, queued requests may experience timeout cascades.
+3. **Distributed Clock Skew Defense**:
+   * *Invariant*: Token expiration checks `MUST NEVER` rely on application server wall clocks (which may drift across Kubernetes nodes). All evaluations `MUST` execute against database engine UTC time (`CURRENT_TIMESTAMP`).
+
 ### Security Invariants for Cross-Domain Authentication
 1.  **Hashed Token Storage**: Refresh tokens `MUST NEVER` be stored in plaintext. The database stores cryptographic hashes (`SHA-256`) of the refresh token. A database dump reveals zero usable credentials.
 2.  **Single-Use Atomic Rotation**: Every token refresh consumes the presented token and issues a replacement. Both actions occur in a single atomic database transaction.
-3.  **Whole-Family Revocation on Reuse**: If a refresh token that was already consumed is presented a second time, the authentication service flags an active replay attack and **immediately revokes all active tokens in that entire family**, terminating the attacker's and legitimate user's sessions.
-4.  **Concurrent Refresh Grace Period**: To prevent race conditions in mobile environments (where two parallel network requests trigger simultaneous refresh calls), the auth server allows a narrow **30-second grace period** where presenting the immediately preceding token returns the already-issued successor token rather than triggering family revocation.
-5.  **Client Storage Isolation**:
+3.  **Whole-Family Revocation on Reuse**: If a refresh token that was already consumed is presented outside the grace period or without lock coordination, the authentication service flags an active replay attack and **immediately revokes all active tokens in that entire family**, terminating the attacker's and legitimate user's sessions.
+4.  **Client Storage Isolation**:
     *   *Web Browsers*: Refresh tokens `MUST` be stored in `HttpOnly; Secure; SameSite=Strict` cookies to block XSS exfiltration. Access tokens remain in memory.
     *   *Android*: Tokens `MUST` be stored in `EncryptedSharedPreferences` backed by the hardware **Android KeyStore** (MasterKey AES-256-GCM).
 
@@ -186,6 +359,72 @@ $$\begin{array}{cccccc}
 \mathbf{Mobile\ /\ Web\ Client} & > & \mathbf{Backend\ Ingress} & > & \mathbf{Database\ Statement} & > & \mathbf{Downstream\ HTTP} \\
 \mathbf{5.0s\ Total\ Budget} & & \mathbf{4.0s\ Request\ Deadline} & & \mathbf{2.0s\ statement\_timeout} & & \mathbf{1.5s\ Outbound\ Call}
 \end{array}$$
+
+### 6.1 Distributed Deadline Propagation & Cancellation Mechanics
+
+Static timeouts defined independently per service fail in multi-tier distributed architectures. If each service in a 4-tier chain allows a static 5-second timeout, a lagging request can lock resources for 20 seconds. Systems `MUST` practice **Distributed Deadline Propagation**:
+
+```
++---------------------------------------------------------------------------------------------------------+
+|                                    DISTRIBUTED DEADLINE BUDGETING                                       |
+|                                                                                                         |
+|  [Client] ------------------> [API Gateway] -------------> [Backend Service] --------> [Database]      |
+|  Budget: 5000ms               Budget: 4000ms               Budget: 2500ms              Budget: 2000ms   |
+|  Elapsed: 0ms                 Elapsed: 40ms                Elapsed: 120ms              Elapsed: 200ms   |
+|  Header:                      Header:                      Context:                    Config:          |
+|  X-Request-Deadline: <T_end>  X-Request-Timeout-Ms: 3960   AbortSignal / ctx.Deadline  statement_timeout|
+|                                                                                                         |
+|  -- IF CLIENT DROPS (TCP RESET / USER NAVIGATES AWAY) ------------------------------------------------  |
+|  [Client Closes Socket] ===>  [Gateway Aborts Signal] ===> [Service Cancels ctx] ====> [pg_cancel_backend]|
++---------------------------------------------------------------------------------------------------------+
+```
+
+1. **Standard Transport Headers**:
+   * `X-Request-Deadline`: An absolute UTC ISO-8601 timestamp (e.g., `2026-11-03T14:30:05.500Z`) calculated at client dispatch ($t_{\text{now}} + \text{budget}$).
+   * `X-Request-Timeout-Ms`: An integer millisecond budget passed downstream, decremented at each ingress hop by the elapsed processing time.
+   * `W3C Baggage`: Optional standardization using `baggage: request.deadline=1730644205500`.
+2. **Context Cancellation Mechanics Across Tiers**:
+   * **Web / Browser (TypeScript)**:
+     ```typescript
+     // Web client creates an AbortController tied to the request deadline
+     const controller = new AbortController();
+     const timeoutId = setTimeout(() => controller.abort(new Error("Request deadline exceeded")), 5000);
+     
+     try {
+       const res = await fetch("/api/v1/orders", {
+         signal: controller.signal,
+         headers: { "X-Request-Timeout-Ms": "4000" }
+       });
+     } finally {
+       clearTimeout(timeoutId);
+     }
+     ```
+   * **Android (Kotlin Coroutines)**:
+     ```kotlin
+     // Android coroutine enforces structured cancellation
+     suspend fun placeOrder(request: OrderRequest): Result<OrderResponse> = withTimeoutOrNull(5000L) {
+         // Cooperative cancellation automatically cancels the underlying OkHttp call if the parent scope finishes
+         coroutineContext.ensureActive()
+         apiService.submitOrder(request)
+     } ?: Result.failure(TimeoutException("Global client timeout budget expired"))
+     ```
+   * **Backend Application Service (Node.js / Go)**:
+     ```typescript
+     // Backend extracts remaining timeout and creates a downstream AbortSignal
+     const remainingMs = Math.min(4000, parseInt(req.headers["x-request-timeout-ms"] || "4000", 10));
+     const downstreamSignal = AbortSignal.timeout(remainingMs);
+     
+     // Detect upstream client disconnect and abort downstream operations immediately
+     req.on("close", () => {
+       if (!res.writableEnded) {
+         downstreamSignal.abort(new Error("Client abandoned connection"));
+       }
+     });
+     ```
+   * **Relational Database Engine (PostgreSQL)**:
+     * When a client disconnects or the service deadline triggers, the connection pool driver `MUST NOT` leave the transaction running.
+     * The database session sets `SET LOCAL statement_timeout = '2000';` at the start of each transaction.
+     * If the backend worker thread is cancelled, the pool manager sends an explicit query cancellation (`pg_cancel_backend(pid)`) to PostgreSQL, halting table scans and releasing row locks immediately.
 
 ### Retry Safety Rules
 1.  **Idempotent Methods Only**: Automatic retries are permitted `ONLY` on safe/idempotent HTTP methods (`GET`, `HEAD`, `PUT`, `DELETE`) or on network connection handshakes that failed before any bytes were transmitted.
@@ -303,14 +542,25 @@ flowchart TD
     *   Dispatches payment request to Stripe API carrying the order ID as Stripe's idempotency key with a **1.5-second timeout**.
     *   Upon payment success, updates order status to `CONFIRMED` and removes the outbox event in a single transaction.
 
+### 8.1 Distinction Between Architectural Walkthrough & Executable Test Evidence
+
+In strict accordance with Tier 1 Universal Engineering Standard Rule 4 (Verification Integrity):
+* **The Architectural Walkthrough (above)**: Serves as the normative conceptual specification and structural sequence contract. It illustrates how client, gateway, backend controller, service layer, database, and background workers must interact.
+* **The Executable Integration Test Harnesses (Reference Implementations)**:
+  1. *Backend API & Domain Logic*: The API boundary parsing, BOLA ownership validation, idempotency caching, Unit of Work transaction boundaries, and RFC 9457 error mappings are concretely implemented in [`06-technologies/backend/examples/representative-api.ts`](backend/examples/representative-api.ts) and empirically verified by [`06-technologies/backend/examples/representative-api.test.ts`](backend/examples/representative-api.test.ts).
+  2. *Relational Database & Concurrency*: The PostgreSQL 16+ schemas, constraints, OCC version columns, pessimistic locks, outbox tables, and audit ledger are concretely implemented in [`06-technologies/database/examples/representative-schema-and-migration.sql`](database/examples/representative-schema-and-migration.sql) and verified in CI via [`06-technologies/database/examples/verify-postgres-runtime.sh`](database/examples/verify-postgres-runtime.sh).
+  3. *Workstation Offline Verifiers*: Workstations without Docker/Node.js execute contract and structural checks via [`tools/test-backend-example.ps1`](../tools/test-backend-example.ps1) and [`tools/test-database-example.ps1`](../tools/test-database-example.ps1).
+
 ---
 
 ## 9. Cross-Domain Verification Checklist
 
-- [ ] **Authoritative Ownership Respected**: Every validation, authorization, and transactional decision is owned by exactly one layer according to the Ownership Matrix.
-- [ ] **Unified Deadline Hierarchy Enforced**: Ingress timeout > Controller timeout > Database statement timeout > Outbound network timeout; zero unhedged timeouts exist.
+- [ ] **Authoritative Ownership Respected**: Every validation, authorization, and transactional decision is owned by exactly one layer according to the 4-Dimensional Ownership Matrix.
+- [ ] **Unified Deadline Hierarchy Enforced**: Ingress timeout > Controller timeout > Database statement timeout > Outbound network timeout; context cancellation (`AbortSignal` / `ensureActive()`) propagates downstream.
 - [ ] **Zero Database Error Leakage**: Raw database SQL errors, table names, and constraint identifiers are completely intercepted and mapped to RFC 9457 Problem Details.
-- [ ] **Atomic Token Rotation & Reuse Defense**: Refresh token rotation is atomic; token reuse immediately revokes the full session family; refresh tokens are stored as salted hashes.
-- [ ] **Outbox Pattern for External Side Effects**: Zero external HTTP calls or message publishes exist inside database transactions; all side effects traverse transactional outbox tables.
+- [ ] **Formal Token-Family State Machine Implemented**: Refresh tokens transition through `ISSUED` $\to$ `ACTIVE` $\to$ `CONSUMED`/`REVOKED`; token reuse immediately revokes the full session family.
+- [ ] **Domain-Governed Financial Rounding**: Banker's Rounding vs. Commercial Round-Half-Up is selected according to statutory/business domain; intermediate calculations retain full decimal precision.
+- [ ] **Outbox Pattern with Production Resilience**: Zero external network calls exist inside local DB transactions; consumers enforce inbox deduplication; poison messages route to DLQ.
 - [ ] **Effectively-Once Mutation Semantics**: Critical POST/PATCH endpoints enforce `Idempotency-Key` headers backed by SHA-256 payload fingerprinting and database unique constraints.
 - [ ] **Sanitized Telemetry & Tamper-Evident Audit**: Operational logs pass through PII redaction filters; regulatory business events write append-only records to `audit_ledger`.
+- [ ] **Empirical Verification Executed**: Test suites in `representative-api.test.ts` and `verify-postgres-runtime.sh` pass with zero failures in CI/CD pipeline.

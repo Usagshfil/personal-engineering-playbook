@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0-rc.1] - 2026-11-03
+
+### Added
+- **Milestone 5.0: Playbook Finalization for Real-World Project Use**:
+  - **4-Dimensional Ownership Matrix (F23)**: Formalized Policy Owner, Source of Truth, Enforcement Layer(s), and Validation Responsibilities across Client, API Gateway, Service Layer, and Database Engine.
+  - **Token-Family Rotation State Machine (F24)**: Formalized lifecycle transitions (`ISSUED` $\to$ `ACTIVE` $\to$ `CONSUMED` / `REVOKED`) with Mermaid state diagram and deep concurrency analysis contrasting 30s mobile grace periods vs. atomic database advisory locks.
+  - **De-Dogmatized Financial Rounding (F25)**: Explicitly distinguished Banker's Rounding (`ROUND_HALF_EVEN`) for high-volume financial accounting from commercial rounding (`ROUND_HALF_UP`) for retail statutory tax compliance (HMRC, IRS, EU VAT), enforcing strict boundary rounding.
+  - **Distributed Deadline Propagation (F26)**: Standardized `X-Request-Deadline` and `X-Request-Timeout-Ms` headers with context cancellation across Web (`AbortSignal`), Android (Kotlin Coroutines), Backend, and Database (`pg_cancel_backend`).
+  - **Transactional Outbox Operational Realities (F27)**: Comprehensive guidance covering at-least-once delivery duplicate handling, Consumer Inbox pattern, partition key ordering, exponential backoff with Dead-Letter Queues (DLQ), and automated table partitioning/pruning.
+  - **Empirical Integration Evidence (F28)**: Explicitly distinguished normative architectural walkthroughs from executable test harnesses (`representative-api.test.ts` and `verify-postgres-runtime.sh`).
+
 ## [1.0.0-alpha.1] - 2026-11-03
 
 ### Added

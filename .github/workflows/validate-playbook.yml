@@ -9,42 +9,123 @@ on:
 
 jobs:
   validate-ubuntu:
-    name: Validation Suite (Ubuntu)
+    name: Validation Suite & Container Runtime (Ubuntu)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run Playbook Validation Suite
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: '06-technologies/backend/examples/package.json'
+
+      - name: Automated Secret & Credential Scanning Check
+        shell: bash
+        run: |
+          echo "Scanning repository for hardcoded secrets, private keys, and unencrypted credentials..."
+          # Reject tracked files containing common secret markers
+          FOUND_SECRETS=0
+          if grep -rnEi "(PRIVATE KEY-----|aws_secret_access_key|ghp_[A-Za-z0-9]{36}|BEGIN OPENSSH)" \
+             --exclude-dir=".git" --exclude-dir="node_modules" .; then
+            echo "ERROR: Potential hardcoded secret or private key found!"
+            FOUND_SECRETS=1
+          fi
+          if [ "${FOUND_SECRETS}" -ne 0 ]; then
+            exit 1
+          fi
+          echo "PASS: Zero hardcoded secrets detected."
+
+      - name: Backend TypeScript Compilation & Vitest Execution
+        working-directory: 06-technologies/backend/examples
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npx vitest run
+
+      - name: PostgreSQL 16+ Live Container Runtime Verification
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: test_playbook_db
+        run: |
+          chmod +x ./06-technologies/database/examples/verify-postgres-runtime.sh
+          ./06-technologies/database/examples/verify-postgres-runtime.sh
+
+      - name: Run Playbook Validation Suite (PowerShell Core)
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/validate-playbook.ps1
 
-      - name: Run Positive Test Harness
+      - name: Run Positive Test Harness (PowerShell Core)
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/test-validator-positive.ps1
 
-      - name: Run Negative Test Harness
+      - name: Run Negative Test Harness (PowerShell Core)
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/test-validator-negative.ps1
 
-      - name: Run Clean-Clone Reproducibility Harness
+      - name: Run Backend Reference Verifier (PowerShell Core)
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/test-backend-example.ps1
+
+      - name: Run Database Reference Verifier (PowerShell Core)
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/test-database-example.ps1
+
+      - name: Run Clean-Clone Reproducibility Harness (PowerShell Core)
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/test-clean-clone.ps1
 
   validate-windows:
-    name: Validation Suite (Windows)
+    name: Validation Suite (Windows Server)
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: '06-technologies/backend/examples/package.json'
+
+      - name: Backend TypeScript Compilation & Vitest Execution
+        working-directory: 06-technologies/backend/examples
+        shell: pwsh
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npx vitest run
 
       - name: Run Playbook Validation Suite
         shell: pwsh
@@ -60,6 +141,16 @@ jobs:
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File .\tools\test-validator-negative.ps1
+
+      - name: Run Backend Reference Verifier
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\test-backend-example.ps1
+
+      - name: Run Database Reference Verifier
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\test-database-example.ps1
 
       - name: Run Clean-Clone Reproducibility Harness
         shell: pwsh

@@ -263,7 +263,7 @@ if ($BrokenLinks.Count -gt 0) {
 Write-Host "`n--- TEST SUITE 4: Version Metadata Consistency ---" -ForegroundColor Yellow
 
 $VersionFile = Join-Path $PlaybookRoot "VERSION.md"
-$ExpectedVersion = "1.0.0-alpha.1"
+$ExpectedVersion = "1.0.0-rc.1"
 
 if (Test-Path $VersionFile) {
     $VersionContent = Get-Content $VersionFile -Raw

@@ -1,22 +1,88 @@
 # Personal Software Engineering Playbook
 
-> **A permanent, educational, technology-agnostic engineering framework with specialized extensions for modern software development.**
-
-Welcome to your **Personal Software Engineering Playbook**. This repository serves as a permanent reference library of software engineering principles, architectural patterns, lifecycle workflows, reusable AI agent skills, technology-specific standards, documentation templates, and quality assurance checkpoints.
-
-It is designed to bridge intermediate programming knowledge (such as Kotlin and Android Studio) with professional software engineering standards, helping you build scalable, maintainable systems while ensuring AI coding agents act systematically, safely, and predictably.
+> **A permanent, educational, technology-agnostic engineering framework with specialized extensions for modern software development.**  
+> **Status**: Verified Production-Ready Reference System (`v1.0.0-rc.1`)  
+> **Target Audience**: Intermediate Developers & AI Coding Agents (Google Antigravity, Cursor, Claude Code, GitHub Copilot).
 
 ---
 
-## 🏛️ Framework Architecture: The 3-Tier Layering Model
+## ⚡ 30-Second Quick Start: Using This Playbook for a New Project
 
-To ensure universal principles are not polluted by framework-specific syntax, the playbook enforces a strict **3-Tier Separation of Concerns**:
+Starting a new project? Follow these 3 simple steps:
+
+1. **Copy the Universal Agent Governance**:
+   Copy [`AGENTS.md`](AGENTS.md) into the root of your new project repository to establish non-negotiable engineering safety, inspection gates, and verification rules.
+2. **Follow the Reusable 8-Stage Bootstrap Workflow**:
+   Open [`docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md`](docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md) for step-by-step guidance from problem discovery and project classification to CI setup and production release.
+3. **Select Your Project Templates**:
+   Visit the [`templates/`](templates/README.md) catalog to copy production-ready templates for your Project Brief, Architecture Design, API Specs, and Test Plans.
+
+---
+
+## 🧭 The 5 Core Engineering Questions Answered
+
+This playbook is organized around answering five fundamental questions for any software initiative:
+
+```
++---------------------------------------------------------------------------------------------------------------+
+|                                    THE 5 CORE ENGINEERING PILLARS                                             |
+|                                                                                                               |
+|  1. WHAT should I do?     ===> Core Principles, 12-Stage SDLC, Architecture Fit Matrix                        |
+|  2. HOW should I do it?   ===> Tier 2 Tech Standards (Android, Web, Backend, Database) & Cross-Domain     |
+|  3. WHO should do it?     ===> AI Agent Roles, Tool Adapters, 4-Level Instruction Hierarchy                   |
+|  4. HOW do I know it works? => Risk-Based Testing, Quality Gates, 5-Suite Automated Verifiers, CI           |
+|  5. HOW do I bootstrap?   ===> 8-Stage Lifecycle Guide, 15 Standalone Templates, Scenarios Evaluation        |
++---------------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 1. What Should I Do? (Principles, Lifecycle & Architecture)
+* **Timeless Engineering Principles**: Master Clean Code, Modularity, Performance, and Simplicity in [`01-principles/`](01-principles/README.md). Every principle follows a 9-part pedagogical schema with Good/Bad code examples.
+* **12-Stage Software Development Lifecycle (SDLC)**: Explore strict Phase Gates (Discovery $\to$ Architecture $\to$ Implementation $\to$ QA $\to$ Release $\to$ Maintenance) in [`02-lifecycle/`](02-lifecycle/README.md).
+* **Architecture Pattern Fit Matrix**: Select the right architecture (Layered, Clean, Event-Driven, Modular) based on project complexity in [`03-architecture/`](03-architecture/README.md).
+* **Security & Privacy Baseline**: Enforce STRIDE threat modeling, least privilege, zero hardcoded secrets, and PII protection in [`10-security-and-privacy/`](10-security-and-privacy/README.md).
+
+### 2. How Should I Do It? (Technology Standards & Cross-Domain Harmonization)
+* **Android Development (Priority 1)**: Modern Kotlin 2.0, Jetpack Compose, Coroutines/StateFlow, Room persistence, Dagger Hilt, and Gradle Version Catalogs in [`06-technologies/android/`](06-technologies/android/README.md).
+* **Web Frontend (Priority 2)**: Strict TypeScript 5.5+, React 19, Tailwind CSS, TanStack Query, and WCAG 2.1 AA accessibility in [`06-technologies/web/`](06-technologies/web/README.md).
+* **Backend & APIs (Priority 3)**: RESTful API design, Zod boundary validation, RFC 9457 Problem Details, Unit of Work, and idempotency in [`06-technologies/backend/`](06-technologies/backend/README.md).
+* **Database & Persistence (Priority 4)**: PostgreSQL 16+ schemas, 3NF normalization, composite indexing, expand-and-contract migrations, and concurrency in [`06-technologies/database/`](06-technologies/database/README.md).
+* **Cross-Domain Consistency Layer**: Harmonize timeouts, token family rotation state machines, domain rounding, and the Transactional Outbox in [`06-technologies/CROSS_DOMAIN_CONSISTENCY.md`](06-technologies/CROSS_DOMAIN_CONSISTENCY.md).
+
+### 3. Who Should Do It? (AI Agent Roles, Skills & Instruction Hierarchy)
+* **Universal Agent Rules (`AGENTS.md`)**: The root contract mandating *Inspect Before Modifying*, *Plan Before Substantial Implementation*, *Zero Silent Overwrites*, and *Verification Integrity*.
+* **4-Level Instruction Precedence**:
+  $$\text{Project Rules (Level 3)} \succ \text{Technology Rules (Level 2)} \succ \text{Universal Rules (Level 1)}$$
+  *(The Iron Safety Gate: Universal safety, security, and verification rules can NEVER be overridden).*
+* **Specialized Agent Roles**: Planning, Architecture, Coding, Debugging, Testing, Review, and Documentation personas in [`04-agents/roles/`](04-agents/roles/).
+* **Tool-Specific Adapters**: Dedicated adapters for Google Antigravity, Cursor, Claude Code, and GitHub Copilot in [`04-agents/adapters/`](04-agents/adapters/).
+* **12 Reusable Agent Skills**: Standards-compliant skills following the [Agent Skills Specification](https://agentskills.io) in [`05-skills/`](05-skills/README.md).
+
+### 4. How Do I Know It Works? (Testing Doctrine, Validation & Quality Gates)
+* **Risk-Based Testing (RBT)**: Pragmatic verification focused on core domain logic, race conditions, edge cases, and regression proofs in [`02-lifecycle/10-testing.md`](02-lifecycle/10-testing.md) and [`05-skills/testing-and-qa/SKILL.md`](05-skills/testing-and-qa/SKILL.md).
+* **Automated Verification Harnesses**:
+  * `tools/validate-playbook.ps1`: Full link integrity, absolute path hygiene, and technology schema validator.
+  * `tools/test-validator-positive.ps1` & `test-validator-negative.ps1`: Skill schema test suites.
+  * `tools/test-backend-example.ps1`: Clean architecture and idempotency contract verifier.
+  * `tools/test-database-example.ps1`: PostgreSQL 16+ structural and migration verifier.
+  * `tools/test-clean-clone.ps1`: End-to-end reproducibility harness executing all suites from an isolated clone.
+* **CI/CD Pipeline**: Upgraded GitHub Actions workflow ([`.github/workflows/validate-playbook.yml`](.github/workflows/validate-playbook.yml)) running on Ubuntu and Windows with Node 20, automated secret scanning, and live PostgreSQL 16 container testing.
+
+### 5. How Do I Bootstrap a New Project? (Workflow, Templates & Scenarios)
+* **The 8-Stage Operating Manual**: Follow [`docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md`](docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md) from Initialization to Release.
+* **Reusable Project Templates**: 15 standalone templates ready to copy into new repositories in [`templates/`](templates/README.md).
+* **Real-World Project Evaluations**: Detailed walkthroughs across Small Android, Medium Web, and Complex Distributed platforms in [`docs/reports/PROJECT_SCENARIOS_EVALUATION.md`](docs/reports/PROJECT_SCENARIOS_EVALUATION.md).
+
+---
+
+## 🏛️ Framework Layering Architecture: The 3-Tier Model
 
 ```
 +-----------------------------------------------------------------------------------+
 |                           TIER 1: UNIVERSAL CORE                                  |
 |  - Engineering Principles (Clean Code, SOLID, DRY, KISS, YAGNI)                   |
-|  - Software Development Lifecycle (SDLC: Discovery to Maintenance)               |
+|  - Software Development Lifecycle (12 SDLC Stages: Discovery to Maintenance)      |
 |  - Universal Architecture Patterns & Fit Matrix                                   |
 |  - Universal AI Agent Governance (AGENTS.md & 4-Level Instruction Hierarchy)      |
 |  - Universal Security & Privacy Engineering (Defense-in-Depth, STRIDE)            |
@@ -30,12 +96,13 @@ To ensure universal principles are not polluted by framework-specific syntax, th
 |  - Web (Modern TypeScript, React Component Architecture, State, Accessibility)    |
 |  - Backend (REST API Design, Service Layer Architecture, Validation, Auth)       |
 |  - Database (Relational Modeling, Indexing, Transactions, Migrations, Integrity)  |
+|  - Cross-Domain Consistency & Harmonization Specification                         |
 +-----------------------------------------------------------------------------------+
                                           │
                                           ▼
 +-----------------------------------------------------------------------------------+
 |                        TIER 3: PROJECT OVERLAYS                                   |
-|  - Active target application repository (e.g., ExpenseTracker, SocialApp)        |
+|  - Active target application repository (e.g., ExpenseTracker, CheckoutPlatform)  |
 |  - Local project rules (.agent/PROJECT.md, CLAUDE.md, .cursorrules)               |
 |  - Specific domain requirements, chosen dependencies, and progress tracking       |
 +-----------------------------------------------------------------------------------+
@@ -43,77 +110,45 @@ To ensure universal principles are not polluted by framework-specific syntax, th
 
 ---
 
-## 🤖 The 4-Level AI Instruction Hierarchy
-
-AI coding agents must not generate code blindly without planning. The framework organizes instructions into four discrete precedence levels:
-
-```
-Level 1: Universal Engineering Rules (AGENTS.md, Principles, Security, Verification)
-   ├── Level 2: Technology-Specific Rules (Android, Web, Backend, Database)
-   │      ├── Level 3: Project-Specific Rules (Project Requirements, Stack, Decisions)
-   │      │      └── Level 4: Task-Specific Skills & Agent Roles (Planning, Coding, Debugging)
-```
-
-### Precedence & Conflict Resolution
-$$\text{Project Rule (Level 3)} \succ \text{Technology Rule (Level 2)} \succ \text{Universal Rule (Level 1)}$$
-
-> [!IMPORTANT]
-> **The Iron Safety Gate**: Universal Safety, Security, and Verification Integrity rules (Level 1) can **never** be overridden by Level 2 or Level 3 rules. A project may choose its preferred libraries or conventions, but it cannot authorize an AI agent to commit unencrypted secrets, skip regression tests for bug fixes, or claim functionality works without verification.
-
----
-
 ## 📂 Repository Organization
 
 ```text
 personal-engineering-playbook/
-├── README.md                           # This guide
+├── README.md                           # Master entry point & 5-question guide
 ├── AGENTS.md                           # Universal root instructions for AI coding agents
-├── VERSION.md                          # Framework SemVer definition (v1.0.0-alpha)
-├── CHANGELOG.md                        # Version history and migration notes
-├── CONTRIBUTING.md                     # Rules for refining and extending the playbook
-├── IMPROVEMENT_BACKLOG.md              # Living queue of planned enhancements (iOS, Flutter, ML)
+├── VERSION.md                          # Framework SemVer specification (v1.0.0-rc.1)
+├── CHANGELOG.md                        # Version history and milestone change logs
+├── CONTRIBUTING.md                     # Engineering standards for contributing
+├── IMPROVEMENT_BACKLOG.md              # Roadmap and future technology extensions
+│
+├── docs/                               # Engineering guides and authoritative reports
+│   ├── guides/                         # PROJECT_BOOTSTRAP_WORKFLOW.md
+│   └── reports/                        # FINALIZATION_BASELINE.md, PROJECT_SCENARIOS_EVALUATION.md, etc.
+│
+├── templates/                          # 15 Reusable, decoupled project templates + Catalog Index
+│   ├── 01-PROJECT_BRIEF_TEMPLATE.md
+│   ├── 02-REQUIREMENTS_SPEC_TEMPLATE.md
+│   ├── ...
+│   └── README.md                       # Master Template Index & Selector
 │
 ├── 01-principles/                      # 12 Core Principles with 9-part pedagogical schema
-├── 02-lifecycle/                       # 12 SDLC Stages (Inputs, Activities, Outputs, Gate criteria)
+├── 02-lifecycle/                       # 12 SDLC Stages (Inputs, Activities, Outputs, Gate Criteria)
 ├── 03-architecture/                    # 11 Architecture Patterns & Complexity Fit Matrix
 ├── 04-agents/                          # Universal Agent Rules, 7 Roles & 4 Tool Adapters
 ├── 05-skills/                          # 12 Reusable AI Skills (agentskills.io compliant)
-├── 06-technologies/                    # Domain Standards: Android (P1), Web (P2), Backend (P3), Database (P4)
-├── 07-templates/                       # 17 Standardized Markdown Documentation Templates
+├── 06-technologies/                    # Domain Standards: Android, Web, Backend, Database & Cross-Domain
+├── 07-templates/                       # Playbook internal documentation templates
 ├── 08-quality/                         # Risk-Based QA Checklists & 4 Operational Phase Gates
-├── 09-project-management/              # 9 PM Workflows & 4 Tracking Templates
+├── 09-project-management/              # 9 PM Workflows & Progress Tracking
 ├── 10-security-and-privacy/            # 9 Universal Security & Privacy Engineering Guides
-└── tools/                              # Automation & Scaffolding Utilities (scaffold-project.ps1)
+└── tools/                              # Automation, validation suites & clean-clone harnesses
 ```
-
----
-
-## 🎓 The 9-Part Pedagogical Schema
-
-To ensure this playbook helps you continuously grow as an engineer, every major concept in `01-principles/`, `03-architecture/`, and `10-security-and-privacy/` follows an educational structure:
-1. **Definition**: Plain-English explanation.
-2. **Purpose**: The specific failure mode this concept eliminates.
-3. **Why It Matters**: The fundamental mental model and engineering value.
-4. **When to Use It**: Concrete scenarios and trigger conditions.
-5. **When NOT to Use It**: Anti-complexity limits to prevent over-engineering.
-6. **Advantages & Disadvantages**: Honest trade-off analysis.
-7. **Practical Examples**: Side-by-side **Good** vs. **Bad** code snippets.
-8. **Common Mistakes**: Traps and anti-patterns intermediate developers make.
-9. **Verification Checklist**: A fast 5-point sanity checklist.
-
----
-
-## 🚀 How to Adopt in a Project
-
-1. **Standalone Knowledge Base**: Keep this repository open while studying, coding, or designing systems.
-2. **AI Agent Integration**: Point your AI assistant (Google Antigravity, Cursor, Claude Code, GitHub Copilot) to `AGENTS.md` and the relevant `05-skills/` or `06-technologies/` directories.
-3. **Project Scaffolding**: Use the guidance in `04-agents/adapters/` (or the `tools/scaffold-project.ps1` utility) to bootstrap Level 1–3 rules into a new or existing project repository.
 
 ---
 
 ## 📜 Version & Governance
 
-* **Current Version**: `1.0.0-alpha.1`
+* **Current Version**: `1.0.0-rc.1`
 * **Governed by**: Semantic Versioning (SemVer 2.0.0)
 * **Changelog**: See [CHANGELOG.md](CHANGELOG.md)
 * **Contributions**: See [CONTRIBUTING.md](CONTRIBUTING.md)
