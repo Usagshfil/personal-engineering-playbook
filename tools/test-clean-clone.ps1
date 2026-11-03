@@ -78,9 +78,15 @@ try {
     powershell -ExecutionPolicy Bypass -File $BackendExampleScript -PlaybookRoot $TempCloneDir
     $BackendExampleExitCode = $LASTEXITCODE
 
+    # 9. Run database representative SQL verifier on clean clone
+    Write-Host "`n--- Executing test-database-example.ps1 in Clean Clone ---" -ForegroundColor Yellow
+    $DatabaseExampleScript = Join-Path $TempCloneDir "tools\test-database-example.ps1"
+    powershell -ExecutionPolicy Bypass -File $DatabaseExampleScript -PlaybookRoot $TempCloneDir
+    $DatabaseExampleExitCode = $LASTEXITCODE
+
     Write-Host "`n================================================================" -ForegroundColor Cyan
-    Write-Host "Clean Clone Results: Validator ExitCode=$ValidatorExitCode, Positive ExitCode=$PositiveExitCode, Negative ExitCode=$NegativeExitCode, Backend ExitCode=$BackendExampleExitCode"
-    if ($ValidatorExitCode -eq 0 -and $PositiveExitCode -eq 0 -and $NegativeExitCode -eq 0 -and $BackendExampleExitCode -eq 0) {
+    Write-Host "Clean Clone Results: Validator=$ValidatorExitCode, Positive=$PositiveExitCode, Negative=$NegativeExitCode, Backend=$BackendExampleExitCode, Database=$DatabaseExampleExitCode"
+    if ($ValidatorExitCode -eq 0 -and $PositiveExitCode -eq 0 -and $NegativeExitCode -eq 0 -and $BackendExampleExitCode -eq 0 -and $DatabaseExampleExitCode -eq 0) {
         Write-Host "CLEAN CLONE VERIFICATION PASSED! Repository is fully reproducible." -ForegroundColor Green
         $FinalResult = 0
     } else {

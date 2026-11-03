@@ -1,7 +1,7 @@
 # Tier 2: Technology-Specific Engineering Standards
 
 > **Architecture Tier**: Tier 2 (Technology Standards Layer)  
-> **Status**: In Progress (Priority 1: Android, Priority 2: Web & Priority 3: Backend Active & Completed)  
+> **Status**: Completed (Priority 1: Android, Priority 2: Web, Priority 3: Backend, and Priority 4: Database & Persistence Active & Completed)  
 > **Applicability**: Domain-specific extensions augmenting Tier 1 Universal Core
 
 ---
@@ -22,27 +22,28 @@ $$\text{Tier 3: Project Overlay} \succ \text{Tier 2: Technology Standards} \succ
 
 ## 2. Technology Standards Roadmap (Milestone 4 Delivery)
 
-The following four technology domains are scheduled for comprehensive implementation in **Milestone 4**:
+All four core technology domains of **Milestone 4** are fully implemented and verified:
 
 | Domain | Priority | Target Technologies | Standard Documentation | Status |
 | :--- | :---: | :--- | :--- | :---: |
 | **Android** | **Priority 1** | Kotlin, Jetpack Compose, Coroutines/Flow, Room Database, Hilt/Koin DI, Android Architecture Recommendations | [Android Standards](android/README.md) (8 guides) | **Active (Completed)** |
 | **Web Frontend** | **Priority 2** | TypeScript, React 19, Vite/Next.js, Tailwind CSS, Modern Web APIs, Web Performance (CWV) | [Web Standards](web/README.md) (6 guides) | **Active (Completed)** |
 | **Backend & APIs** | **Priority 3** | RESTful API Design, RFC 9110, Node.js / Go / Spring Boot, OAuth2/OIDC, Resilience & Observability | [Backend Standards](backend/README.md) (6 guides) | **Active (Completed)** |
-| **Database & Persistence** | **Priority 4** | Relational SQL (PostgreSQL, SQLite), 3NF Normalization, Indexing Strategies, Safe Migrations, Concurrency, Pooling, Backup/Recovery | `06-technologies/database/` (7 guides) | Planned (M4) |
+| **Database & Persistence** | **Priority 4** | Relational SQL (PostgreSQL 16+, SQLite), 3NF Normalization, Indexing Strategies, Safe Migrations, Concurrency, Pooling, Backup/Recovery | [Database Standards](database/README.md) (7 guides) | **Active (Completed)** |
 
 ---
 
-## 3. Interim Agent Fallback Protocol
+## 3. Normative Agent Operating Guidance
 
 > [!IMPORTANT]
 > **Normative Guidance for AI Agents Operating Across Technology Domains**:
 > - **Android Projects**: Must strictly follow the normative guides in [`06-technologies/android/`](android/README.md).
 > - **Web Projects**: Must strictly follow the normative guides in [`06-technologies/web/`](web/README.md).
 > - **Backend Projects**: Must strictly follow the normative guides in [`06-technologies/backend/`](backend/README.md).
-> - **Database Domain**: While these standards remain in `Planned` status, AI coding agents working on tasks requiring technology-specific patterns must follow this strict fallback hierarchy:
->   1. **Tier 1 Universal Primacy**: Strictly observe all universal rules in `01-principles/`, `03-architecture/`, `10-security-and-privacy/`, and `AGENTS.md`.
->   2. **Authoritative Official Standards**: Default to the highest official industry documentation:
->      - **Database**: ANSI SQL-92/99, PostgreSQL Documentation, and SQLite Architecture Guidelines.
->   3. **Zero Invention of Ad-Hoc Conventions**: Do NOT invent bespoke architectural layers, custom annotations, or idiosyncratic conventions not recognized in the target ecosystem.
->   4. **Graceful Delegation**: When skills (such as `database-engineering`) refer to Tier 2 standards for pending domains, agents must interpret the reference as a delegation to this Interim Fallback Protocol until the dedicated files are generated in Milestone 4.
+> - **Database & Persistence Projects**: Must strictly follow the normative guides in [`06-technologies/database/`](database/README.md).
+>
+> When executing engineering tasks within these domains, AI coding agents must observe this precedence hierarchy:
+> 1. **Tier 1 Universal Primacy**: Strictly observe all universal rules in `01-principles/`, `03-architecture/`, `10-security-and-privacy/`, and `AGENTS.md`.
+> 2. **Tier 2 Domain Standards**: Apply idiomatic patterns, non-blocking migrations, strict typing, and security invariants defined in the respective domain guides.
+> 3. **Zero Invention of Ad-Hoc Conventions**: Do NOT invent bespoke architectural layers, unverified libraries, custom annotations, or idiosyncratic conventions not recognized in the target ecosystem.
+> 4. **Skill Delegation**: Agent skills (such as `database-engineering`, `system-architecture`, `coding-and-implementation`) reference these Tier 2 standards as their direct normative execution substrate.
