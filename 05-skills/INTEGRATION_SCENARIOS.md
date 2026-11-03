@@ -8,23 +8,28 @@
 
 ## 1. Overview & Objective
 
-This document provides complete, simulated end-to-end operational execution evidence for the 12 reusable skills across three representative software engineering scenarios:
+This document evaluates the practical interoperability and behavioral coordination of the 12 reusable skills across three representative software engineering scenarios:
 1. **Scenario A: Building a Simple Application** (Rapid, lean lifecycle without premature complexity).
 2. **Scenario B: Triage & Resolution of a Critical Production Bug** (Evidence-based root cause analysis and regression testing).
 3. **Scenario C: Adding a Complex Security Feature** (Multi-skill coordination across database, UI, and security).
 
-For each scenario, we provide:
-- The initial user prompt and task trigger.
-- Explicit skill selection rationale.
-- Step-by-step execution traces with deterministic handoffs.
-- Concrete deliverables and artifacts produced.
-- Empirical verification command logs with exit codes.
-- Human-in-the-loop approval checkpoints.
-- Retrospective evaluations analyzing trade-offs and complexity guards.
+### Execution Status Taxonomy
+
+In strict accordance with the Playbook's Verification Integrity doctrine (Rule 4), we distinguish four execution levels:
+- `DESIGNED`: Workflow planned and documented; no trace simulated.
+- `SIMULATED`: Complete end-to-end trace with simulated prompts, deliverables, and commands; unproven against physical device/OS runtime.
+- `EXECUTED`: Live execution against a physical codebase and runtime with real process output.
+- `FAILED`: Execution attempted and failed.
+
+| Scenario | Execution Status | Operational Environment | What Remains Unproven Until Milestone 7 |
+| :--- | :---: | :--- | :--- |
+| **Scenario A: Flashcard MVP** | **`SIMULATED`** | Simulated Antigravity multi-skill chain | Real Gradle daemon startup, physical JVM compilation time, Android Studio IDE sync. |
+| **Scenario B: Crash Triage** | **`SIMULATED`** | Simulated TDD Red-to-Green trace | Real Sentry webhook ingestion, physical device race condition timing. |
+| **Scenario C: Biometric Vault** | **`SIMULATED`** | Simulated 7-skill security orchestration | Physical biometric sensor HAL variations, device-specific StrongBox Keymaster support. |
 
 ---
 
-## 2. Scenario A: Building a Simple Application (Flashcard Learning App)
+## 2. Scenario A: Building a Simple Application (Flashcard Learning App) [STATUS: SIMULATED]
 
 ### A. Initial User Task Prompt
 > *"Build a simple flashcard review app in Android with Jetpack Compose. I want to add question/answer cards, review them one by one, flip to see the answer, and mark whether I got it right or wrong. Keep it clean and simple—no unnecessary enterprise boilerplate."*
@@ -102,7 +107,7 @@ Exit Code: 0
 
 ---
 
-## 3. Scenario B: Triage & Resolution of a Critical Production Bug
+## 3. Scenario B: Triage & Resolution of a Critical Production Bug [STATUS: SIMULATED]
 
 ### A. Initial User Task Prompt
 > *"Our production app is crashing on the Cart screen. Sentry reported: `java.lang.IllegalStateException: Order already processing` in `CheckoutViewModel.kt:42` when users rapidly double-tap the 'Pay Now' button. Fix this ASAP!"*
@@ -210,7 +215,7 @@ Exit Code: 0
 
 ---
 
-## 4. Scenario C: Adding a Complex Security Feature (Biometric Vault & Export)
+## 4. Scenario C: Adding a Complex Security Feature (Biometric Vault & Export) [STATUS: SIMULATED]
 
 ### A. Initial User Task Prompt
 > *"Add a Biometric Secure Vault feature to our notes app. Users must be able to lock private notes behind biometric authentication (fingerprint/face), store them with AES-256 database encryption at rest, and export encrypted backup files. Security is critical."*

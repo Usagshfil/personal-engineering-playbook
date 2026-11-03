@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   validate-ubuntu:
@@ -13,16 +14,28 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Run Playbook Validation Suite
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/validate-playbook.ps1
 
+      - name: Run Positive Test Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/test-validator-positive.ps1
+
       - name: Run Negative Test Harness
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File ./tools/test-validator-negative.ps1
+
+      - name: Run Clean-Clone Reproducibility Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/test-clean-clone.ps1
 
   validate-windows:
     name: Validation Suite (Windows)
@@ -30,13 +43,25 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Run Playbook Validation Suite
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File .\tools\validate-playbook.ps1
 
+      - name: Run Positive Test Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\test-validator-positive.ps1
+
       - name: Run Negative Test Harness
         shell: pwsh
         run: |
           pwsh -ExecutionPolicy Bypass -File .\tools\test-validator-negative.ps1
+
+      - name: Run Clean-Clone Reproducibility Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\test-clean-clone.ps1

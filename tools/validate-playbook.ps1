@@ -94,50 +94,106 @@ foreach ($SkillFile in $SkillFiles) {
     $FailureReasons = @()
 
     # 1. Frontmatter delimiter check
-    if (-not ($Content -match "^---\r?\n([\s\S]*?)\r?\n---")) {
+    if (-not ($Content -match "^---\r?\n([\s\S]*?)(?:\r?\n)?---(?:\r?\n|$)")) {
         $SkillPass = $false
         $FailureReasons += "Missing YAML frontmatter delimiters (---)"
     } else {
         $Frontmatter = $Matches[1]
-        
-        # 2. Name check
-        if ($Frontmatter -match "name:\s*([^\r\n]+)") {
-            $SkillName = $Matches[1].Trim()
-            if ($SkillName.Length -gt 64) {
-                $SkillPass = $false
-                $FailureReasons += "Name exceeds 64 characters (Length: $($SkillName.Length))"
-            }
-            if (-not ($SkillName -cmatch $SkillNameRegex)) {
-                $SkillPass = $false
-                $FailureReasons += "Name '$SkillName' does not match agentskills.io regex (lowercase, numbers, hyphens)"
-            }
-            if ($SkillName -ne $ParentDirName) {
-                $SkillPass = $false
-                $FailureReasons += "Name '$SkillName' does not match directory '$ParentDirName'"
-            }
-        } else {
-            $SkillPass = $false
-            $FailureReasons += "Missing required 'name' field"
-        }
 
-        # 3. Description check
-        if ($Frontmatter -match "description:\s*([^\r\n]+)") {
-            $Description = $Matches[1].Trim()
-            if ($Description.Length -gt 1024) {
-                $SkillPass = $false
-                $FailureReasons += "Description exceeds 1024 characters (Length: $($Description.Length))"
-            }
-            if ($Description.Length -eq 0) {
-                $SkillPass = $false
-                $FailureReasons += "Description is empty"
-            }
-            if (-not ($Description -match "Use when")) {
-                $FailureReasons += "WARNING: Description lacks explicit 'Use when' trigger phrase"
-                $WarningCount++
-            }
-        } else {
+        if ([string]::IsNullOrWhiteSpace($Frontmatter)) {
             $SkillPass = $false
-            $FailureReasons += "Missing required 'description' field"
+            $FailureReasons += "Empty YAML frontmatter"
+        } else {
+            # Duplicate keys check
+            $NameKeyMatches = [regex]::Matches($Frontmatter, '(?m)^name\s*:')
+            if ($NameKeyMatches.Count -gt 1) {
+                $SkillPass = $false
+                $FailureReasons += "Duplicate 'name' key in frontmatter"
+            }
+            $DescKeyMatches = [regex]::Matches($Frontmatter, '(?m)^description\s*:')
+            if ($DescKeyMatches.Count -gt 1) {
+                $SkillPass = $false
+                $FailureReasons += "Duplicate 'description' key in frontmatter"
+            }
+
+            # 2. Name check
+            if ($Frontmatter -match "(?m)^name\s*:\s*(.*)$") {
+                $RawName = $Matches[1].Trim()
+                # Check for unclosed quotes
+                if (($RawName.StartsWith('"') -and -not $RawName.EndsWith('"')) -or
+                    ($RawName.StartsWith("'") -and -not $RawName.EndsWith("'")) -or
+                    ($RawName -eq '"') -or ($RawName -eq "'")) {
+                    $SkillPass = $false
+                    $FailureReasons += "Invalid YAML quoting in 'name'"
+                    $SkillName = ""
+                } else {
+                    $SkillName = $RawName.Trim('"', "'").Trim()
+                }
+
+                if ($SkillName.Length -gt 64) {
+                    $SkillPass = $false
+                    $FailureReasons += "Name exceeds 64 characters (Length: $($SkillName.Length))"
+                }
+                if ($SkillName.Length -gt 0 -and -not ($SkillName -cmatch $SkillNameRegex)) {
+                    $SkillPass = $false
+                    $FailureReasons += "Name '$SkillName' does not match agentskills.io regex (lowercase, numbers, hyphens)"
+                }
+                if ($SkillName.Length -gt 0 -and $SkillName -ne $ParentDirName) {
+                    $SkillPass = $false
+                    $FailureReasons += "Name '$SkillName' does not match directory '$ParentDirName'"
+                }
+            } else {
+                $SkillPass = $false
+                $FailureReasons += "Missing required 'name' field"
+            }
+
+            # 3. Description check
+            if ($Frontmatter -match "(?ms)^description\s*:\s*([>|]-?)\s*\r?\n((?:[ \t]+[^\r\n]*\r?\n?)+)") {
+                # Multiline block scalar
+                $Description = ($Matches[2] -split '\r?\n' | ForEach-Object { $_.Trim() }) -join " "
+                $Description = $Description.Trim()
+            } elseif ($Frontmatter -match "(?m)^description\s*:\s*(.*)$") {
+                $RawDesc = $Matches[1].Trim()
+                # Check for unclosed quotes
+                if (($RawDesc.StartsWith('"') -and -not $RawDesc.EndsWith('"')) -or
+                    ($RawDesc.StartsWith("'") -and -not $RawDesc.EndsWith("'")) -or
+                    ($RawDesc -eq '"') -or ($RawDesc -eq "'")) {
+                    $SkillPass = $false
+                    $FailureReasons += "Invalid YAML quoting in 'description'"
+                    $Description = ""
+                } else {
+                    $Description = $RawDesc.Trim('"', "'").Trim()
+                }
+            } else {
+                $Description = $null
+            }
+
+            if ($null -eq $Description) {
+                $SkillPass = $false
+                $FailureReasons += "Missing required 'description' field"
+            } else {
+                if ($Description.Length -gt 1024) {
+                    $SkillPass = $false
+                    $FailureReasons += "Description exceeds 1024 characters (Length: $($Description.Length))"
+                }
+                if ($Description.Length -eq 0 -and $SkillPass) {
+                    $SkillPass = $false
+                    $FailureReasons += "Description is empty"
+                }
+                if ($Description.Length -gt 0 -and -not ($Description -match "Use when")) {
+                    $FailureReasons += "WARNING: Description lacks explicit 'Use when' trigger phrase"
+                    $WarningCount++
+                }
+            }
+
+            # 4. Metadata structure check (if present)
+            if ($Frontmatter -match "(?m)^metadata[ \t]*:[ \t]*(.*)$") {
+                $MetaVal = $Matches[1].Trim()
+                if ($MetaVal -ne "" -and -not ($MetaVal.StartsWith("{"))) {
+                    $SkillPass = $false
+                    $FailureReasons += "Invalid metadata format (metadata must be a mapping, not a scalar value)"
+                }
+            }
         }
     }
 
