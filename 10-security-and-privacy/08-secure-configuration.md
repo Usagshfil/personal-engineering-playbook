@@ -111,10 +111,10 @@ android {
 
 ---
 
-## 9. Verification Checklist
+## 9. Verification Checklist (OWASP MASVS-PLATFORM / MASVS-RESILIENCE)
 
 - [ ] Is `android:allowBackup="false"` set in `AndroidManifest.xml` (unless encrypted backup is explicitly designed)?
 - [ ] Is cleartext HTTP traffic strictly disabled via Network Security Config?
 - [ ] Are internal Activities, Services, and Receivers marked with `android:exported="false"`?
 - [ ] Is R8 code shrinking and obfuscation (`isMinifyEnabled = true`) enabled on release builds?
-- [ ] Are release keystore credentials injected securely via environment variables?
+- [ ] Are release keystore credentials injected securely via environment variables or CI/CD secret vaults (never committed to version control)?

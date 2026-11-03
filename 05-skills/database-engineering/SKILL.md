@@ -14,7 +14,7 @@ metadata:
 ## 1. Overview & Capability
 The **Database Engineering Skill** guides the systematic design, normalization, query optimization, and migration of relational databases. It defines a repeatable, platform-independent engineering procedure ensuring data integrity, optimized indexing, and zero-loss schema migrations across application updates.
 
-Platform-specific syntax (e.g. Android Room, PostgreSQL DDL, Prisma) is delegated to **Technology Standards (`06-technologies/`)**.
+Platform-specific syntax (e.g. Android Room, PostgreSQL DDL, Prisma) is delegated to **Technology Standards ([`06-technologies/README.md`](../../06-technologies/README.md))**.
 
 ---
 
@@ -36,7 +36,7 @@ Platform-specific syntax (e.g. Android Room, PostgreSQL DDL, Prisma) is delegate
 ## 3. Required Inputs & Prerequisites
 *   Domain entities and business rules from `requirement-engineering`.
 *   System Architecture Document (SAD) from `system-architecture`.
-*   Active technology standard reference (`06-technologies/database/` or `06-technologies/android/`).
+*   Active technology standard reference ([`06-technologies/README.md`](../../06-technologies/README.md); consult official platform documentation per the interim fallback protocol).
 
 ---
 
@@ -67,8 +67,8 @@ Platform-specific syntax (e.g. Android Room, PostgreSQL DDL, Prisma) is delegate
 
 ### Step 4: Schema & Data Access Layer Implementation
 Implement the data tier following the active project technology standard:
-*   **Android (Room)**: Author `@Entity(tableName = "...", indices = [...])` and `@Dao` interfaces returning reactive `Flow`. Refer to `06-technologies/android/04-room-database.md`.
-*   **Backend / Relational SQL**: Author versioned SQL DDL or ORM models. Refer to `06-technologies/database/01-relational-design.md`.
+*   **Android (Room)**: Author `@Entity(tableName = "...", indices = [...])` and `@Dao` interfaces returning reactive `Flow`. Refer to [`06-technologies/README.md`](../../06-technologies/README.md) (Tier 2 Roadmap / official Android Room documentation).
+*   **Backend / Relational SQL**: Author versioned SQL DDL or ORM models. Refer to [`06-technologies/README.md`](../../06-technologies/README.md) (Tier 2 Roadmap / official PostgreSQL / SQL standards).
 *   *Universal Rule*: Always use parameterized queries (`:param` or prepared statements) to eliminate SQL injection vulnerabilities.
 
 ### Step 5: Versioned Migration & Verification Strategy

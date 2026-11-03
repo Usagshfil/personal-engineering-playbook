@@ -35,7 +35,7 @@ The purpose of a unified coding style is to eliminate visual friction. When all 
 
 | Advantages | Disadvantages / Trade-offs |
 | :--- | :--- |
-| **Painless Reviews**: Code reviews focus 100% on correctness, performance, and architecture. | **Initial Tool Setup**: Requires configuring linter plugins in Gradle/IDE. |
+| **Painless Reviews**: Code reviews focus 100% on correctness, performance, and architecture. | **Initial Tool Setup**: Requires configuring linter plugins in build tool or IDE (e.g. Gradle, npm, cargo). |
 | **Clean Version Control**: Every line changed in Git represents a real logical change. | **Strictness Fatigue**: Strict linters can occasionally feel pedantic during rapid prototyping. |
 | **Team/Agent Alignment**: AI coding agents conform seamlessly to codebase norms. | **Format Churn**: Reformatting legacy codebases all at once requires a dedicated commit. |
 
@@ -43,7 +43,7 @@ The purpose of a unified coding style is to eliminate visual friction. When all 
 
 ## 7. Practical Examples
 
-### Visual Hierarchy & Guard Clauses (Kotlin)
+### Visual Hierarchy & Guard Clauses (Illustrative Implementation: Kotlin)
 
 ```kotlin
 // BAD: Inconsistent formatting, deep nesting, no clear visual hierarchy

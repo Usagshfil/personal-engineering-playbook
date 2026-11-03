@@ -50,9 +50,12 @@ Data is most vulnerable when traveling across the wire (subject to interception,
 // In build.gradle.kts:
 // implementation("net.zetetic:android-database-sqlcipher:4.5.4")
 
-// Generating or retrieving passphrase from Android Keystore:
+// Generating or retrieving passphrase from Android Keystore (requesting StrongBox if available):
 val passphraseBytes: ByteArray = KeystoreManager.getOrCreateDatabasePassphrase()
 val factory = SupportFactory(passphraseBytes)
+
+// Defensive hygiene: Overwrite raw key bytes in memory after factory initialization
+java.util.Arrays.fill(passphraseBytes, 0.toByte())
 
 val encryptedDatabase = Room.databaseBuilder(
     context,
@@ -85,15 +88,16 @@ interface SafeDao {
 
 ## 8. Common Mistakes
 1.  **String Concatenation in SQLite**: Writing `db.execSQL("DELETE FROM users WHERE id = " + inputId)` instead of using parameterized arguments `arrayOf(inputId)`.
-2.  **Hardcoding the Database Encryption Key**: Using a static hardcoded string `"my_secret_password_123"` as the SQLCipher passphrase, rendering the encryption pointless. Always generate the key dynamically and store it in the Android Keystore.
+2.  **Hardcoding the Database Encryption Key**: Using a static hardcoded string `"my_secret_password_123"` as the SQLCipher passphrase, rendering the encryption illusory. Always generate the key dynamically and store it in the Android Keystore (requesting StrongBox backing where supported).
 3.  **Allowing Downgrade to Plaintext HTTP**: Missing configuration that allows an attacker to downgrade a connection from HTTPS to HTTP.
 
 ---
 
-## 9. Verification Checklist
+## 9. Verification Checklist (OWASP MASVS-STORAGE / ASVS V5)
 
 - [ ] Are 100% of database queries parameterized (via Room or prepared statements)?
 - [ ] If SQLCipher is used, is the encryption passphrase generated securely and stored in the Android Keystore?
+- [ ] Are plaintext key arrays immediately cleared (`Arrays.fill(..., 0)`) after initialization?
 - [ ] Are network requests forced over HTTPS with modern TLS (TLS 1.2 or 1.3)?
 - [ ] Is sensitive personal data excluded from unencrypted local cache files?
 - [ ] Are backend endpoints configured with rate limiting to prevent automated brute-force attacks?

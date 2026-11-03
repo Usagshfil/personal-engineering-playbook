@@ -9,7 +9,10 @@ param(
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "   PERSONAL SOFTWARE ENGINEERING PLAYBOOK VALIDATION SUITE      " -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "Root Path: $PlaybookRoot`n"
+Write-Host "Root Path    : $PlaybookRoot"
+Write-Host "PS Version   : $($PSVersionTable.PSVersion) ($($PSVersionTable.PSEdition))"
+Write-Host "OS Platform  : $([System.Environment]::OSVersion.VersionString)"
+Write-Host "Execution Time: $([System.DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ'))`n"
 
 $ErrorCount = 0
 $WarningCount = 0

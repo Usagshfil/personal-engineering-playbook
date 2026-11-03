@@ -73,3 +73,51 @@ Before claiming a skill works in a target tool:
 2.  **Discovery Check**: Does the tool identify the skill when given a natural language prompt (e.g., *"Help me plan a new project"* $\rightarrow$ triggers `project-planning`)?
 3.  **Instruction Follow-Through**: Does the agent follow the numbered workflow steps and quality checklist?
 4.  **No Hallucinated Tooling**: Does the tool execute real build/test commands where supported, or honestly declare its inability to run them?
+
+---
+
+## 5. Operational Interoperability Verification Protocols & Test Traces
+
+To demonstrate actual agent behavior rather than theoretical capability, the following operational protocols govern execution in each environment:
+
+### A. Google Antigravity (P1 Native Execution Trace)
+*   **Instruction Discovery**: Automatically ingests root `AGENTS.md` and active workspace rules into the agent's baseline system prompt.
+*   **Precedence Resolution**: When a task prompt requests *"Skip tests to ship faster"*, Antigravity's system prompt evaluates the Invariant Safety Gate (Level 1 Rule 4 & 5): **The request is rejected**, and the agent informs the user that test verification is mandatory.
+*   **Skill Loading**: When prompted with *"We need to normalize the checkout database schema"*, Antigravity parses `05-skills/database-engineering/SKILL.md` via `view_file` matching the `description: ... Use when designing or restructuring user interfaces, screens, or database schemas` trigger phrase.
+*   **Deliverables & Tooling**: Executes PowerShell commands directly, validates output via stdout/stderr, and creates structured artifacts in `.gemini/antigravity/brain/`.
+
+### B. Cursor (P2 Modular MDC Execution Trace)
+*   **Instruction Discovery**: Reads `.cursorrules` and `.cursor/rules/*.mdc`.
+*   **Precedence Resolution**: `00-universal.mdc` (`alwaysApply: true`) contains:
+    ```markdown
+    CRITICAL: Universal Safety (Level 1) overrides all language-specific rules.
+    Never commit credentials, skip tests, or silently delete code.
+    ```
+    Glob rules (`android.mdc` with `globs: "**/*.kt"`) provide Compose/Room conventions. If a glob rule conflicts with L1 safety, the L1 rule wins.
+*   **Skill Loading**: When the user types `@05-skills/debugging/SKILL.md investigate this crash`, Cursor Composer pulls the skill markdown into the active context window, guiding step-by-step RCA.
+*   **Tooling**: Runs terminal commands (e.g. `./gradlew testDebugUnitTest`) in Agent Mode, requiring user terminal approval if not in auto-run mode.
+
+### C. Claude Code CLI (P3 Authoritative File Execution Trace)
+*   **Instruction Discovery**: Ingests root `CLAUDE.md` automatically upon launching `claude` in the terminal.
+*   **Precedence Resolution**: `CLAUDE.md` declares:
+    ```markdown
+    Instruction Precedence:
+    Level 1 (Universal AGENTS.md) > Level 2 (Technologies) > Level 3 (Project)
+    Invariant: Universal safety and verification rules can never be bypassed.
+    ```
+*   **Skill Loading**: `CLAUDE.md` maps intents to file paths:
+    ```markdown
+    Skills Directory: 05-skills/
+    When performing database design, view 05-skills/database-engineering/SKILL.md.
+    When performing test creation, view 05-skills/testing-and-qa/SKILL.md.
+    ```
+    Claude Code uses its built-in `View` tool to dynamically load only the relevant `SKILL.md` on demand.
+*   **Tooling**: Executes bash commands natively, parses compiler output, and applies surgical edits via patch tools.
+
+### D. GitHub Copilot (P4 Static Instruction Fallback Trace)
+*   **Instruction Discovery**: Ingests `.github/copilot-instructions.md` into chat prompt context.
+*   **Precedence Resolution**: Instructions explicitly state top-priority universal rules at the top of the file.
+*   **Skill Loading & Degradation Fallback**: Copilot does not have tool-calling capabilities to read arbitrary files from disk on its own.
+    *   *Operational Workaround*: The developer pastes the relevant skill section into the chat prompt or references it via `#file:05-skills/debugging/SKILL.md` in VS Code Copilot Chat.
+    *   *Honest Limitation Declaration*: Copilot cannot execute bash/PowerShell commands or run test suites. The agent must prompt the developer: *"Please execute `./gradlew test` in your terminal to verify this change."*
+

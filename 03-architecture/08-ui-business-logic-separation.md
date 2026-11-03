@@ -20,8 +20,9 @@ When business calculations, sorting algorithms, or network calls are embedded di
 ---
 
 ## 4. When to Use It
-*   **Universal Rule for UI Development**: Never perform database queries, calculations, or network calls inside a Composable function.
-*   **State Hoisting**: Pass state *down* into UI components as simple parameters (`name: String`, `isButtonEnabled: Boolean`) and hoist events *up* as lambdas (`onNameChanged: (String) -> Unit`, `onSubmitClicked: () -> Unit`).
+*   **Domain & Business Logic Isolation**: Never perform database queries, financial/domain calculations, network calls, or permission authorizations inside presentation components (e.g., Jetpack Compose, React, Flutter widgets).
+*   **State Hoisting**: Pass state *down* into UI components as immutable parameters and hoist user events *up* as callbacks or lambdas.
+*   **Permissible UI-Local State**: Ephemeral visual state that has no impact outside the immediate widget (such as animation frame progression, accordion expand/collapse, or active tooltip visibility) is appropriately managed locally within the UI component rather than in the state coordinator.
 
 ---
 

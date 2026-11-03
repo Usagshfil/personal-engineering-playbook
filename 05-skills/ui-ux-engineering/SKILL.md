@@ -69,8 +69,8 @@ Every interactive screen must explicitly define designs for:
 1.  Enforce **State Hoisting**: Screen components receive immutable state data models and emit event callbacks.
 2.  Ensure zero database calls, network requests, or state container references inside reusable child widgets.
 3.  Delegate platform syntax to active Technology Standards:
-    *   *Android*: Jetpack Compose pure composables (`06-technologies/android/02-jetpack-compose.md`).
-    *   *Web*: React / Web components (`06-technologies/web/03-react-architecture.md`).
+    *   *Android*: Jetpack Compose pure composables ([`06-technologies/README.md`](../../06-technologies/README.md); consult official Android Compose mental model per interim fallback).
+    *   *Web*: React / Web components ([`06-technologies/README.md`](../../06-technologies/README.md); consult official React documentation per interim fallback).
 
 ---
 

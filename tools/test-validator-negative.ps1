@@ -1,9 +1,12 @@
 # tools/test-validator-negative.ps1
-# Negative Verification Test for the agentskills.io Validator
+# Comprehensive Negative Verification Harness for the agentskills.io Validator
+# Verifies that malformed, invalid, or out-of-spec skills are properly rejected.
 
 param()
 
-Write-Host "Running Negative Test Cases for Agent Skills Validator..." -ForegroundColor Yellow
+Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "   AGENTSKILLS.IO VALIDATOR NEGATIVE TEST HARNESS (10 CASES)    " -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
 
 $TempDir = Join-Path $env:TEMP ("agentskills-neg-test-" + (Get-Random))
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
@@ -15,9 +18,41 @@ $Cases = @(
         Content = @"
 ---
 name: Invalid-Skill
-description: This is a test. Use when testing.
+description: Valid description. Use when testing uppercase.
 ---
 # Invalid Skill
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
+"@
+        ExpectedError = "does not match agentskills.io regex"
+    },
+    @{
+        Name = "Invalid Name (Underscores / Snake_Case)"
+        Dir = "invalid_snake_case"
+        Content = @"
+---
+name: invalid_snake_case
+description: Valid description. Use when testing snake_case.
+---
+# Invalid Skill
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
 "@
         ExpectedError = "does not match agentskills.io regex"
     },
@@ -26,9 +61,19 @@ description: This is a test. Use when testing.
         Dir = "missing-name"
         Content = @"
 ---
-description: This is a test. Use when testing.
+description: Valid description. Use when testing missing name.
 ---
 # Missing Name
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
 "@
         ExpectedError = "Missing required 'name' field"
     },
@@ -38,33 +83,139 @@ description: This is a test. Use when testing.
         Content = @"
 ---
 name: dir-beta
-description: This is a test. Use when testing.
+description: Valid description. Use when testing directory mismatch.
 ---
 # Mismatch
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
 "@
         ExpectedError = "does not match directory"
     },
     @{
-        Name = "Missing Description"
+        Name = "Name Exceeds 64 Characters"
+        Dir = "this-is-an-extremely-long-skill-name-that-definitely-exceeds-the-maximum-sixty-four-char-limit-set-by-agentskills"
+        Content = @"
+---
+name: this-is-an-extremely-long-skill-name-that-definitely-exceeds-the-maximum-sixty-four-char-limit-set-by-agentskills
+description: Valid description. Use when testing long names.
+---
+# Long Name
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
+"@
+        ExpectedError = "Name exceeds 64 characters"
+    },
+    @{
+        Name = "Missing Description Field"
         Dir = "missing-desc"
         Content = @"
 ---
 name: missing-desc
 ---
-# Missing Desc
+# Missing Description
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
 "@
         ExpectedError = "Missing required 'description' field"
     },
     @{
-        Name = "Missing Required Sections"
+        Name = "Empty Description Field"
+        Dir = "empty-desc"
+        Content = @"
+---
+name: empty-desc
+description: ""
+---
+# Empty Description
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
+"@
+        ExpectedError = "Description is empty"
+    },
+    @{
+        Name = "Description Exceeds 1024 Characters"
+        Dir = "long-desc"
+        Content = @"
+---
+name: long-desc
+description: Use when testing extraordinarily verbose descriptions. $("A" * 1050)
+---
+# Long Description
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
+"@
+        ExpectedError = "Description exceeds 1024 characters"
+    },
+    @{
+        Name = "Missing YAML Frontmatter Delimiters (Malformed YAML)"
+        Dir = "malformed-frontmatter"
+        Content = @"
+name: malformed-frontmatter
+description: Missing enclosing dashes. Use when testing malformed YAML.
+# Malformed Frontmatter
+1. Overview & Capability
+2. When to Use & When NOT to Use
+3. Required Inputs & Prerequisites
+4. Step-by-Step Deterministic Workflow
+5. Expected Outputs & Artifact Formats
+6. Quality & Verification Checklist
+7. Common Mistakes & Pitfalls
+8. Real-World Example Walkthrough
+9. Related Skills & Hand-Offs
+10. Tool Compatibility & Limitations
+"@
+        ExpectedError = "Missing YAML frontmatter delimiters"
+    },
+    @{
+        Name = "Missing Required Mandatory Sections"
         Dir = "missing-sections"
         Content = @"
 ---
 name: missing-sections
-description: Valid description. Use when testing.
+description: Valid description. Use when testing missing sections.
 ---
-# Missing Sections
-Only short content without mandatory sections.
+# Incomplete Skill Content
+This document completely lacks the 10 mandatory sections.
 "@
         ExpectedError = "Missing mandatory section"
     }
@@ -78,42 +229,85 @@ foreach ($TestCase in $Cases) {
     $FilePath = Join-Path $CaseDir "SKILL.md"
     Set-Content -Path $FilePath -Value $TestCase.Content
 
-    # Run validation snippet
+    # Validation Engine Execution (mirrors tools/validate-playbook.ps1)
     $Content = Get-Content -Path $FilePath -Raw
     $CaughtExpectedError = $false
+    $ActualErrors = @()
 
-    if ($Content -match "^---\r?\n([\s\S]*?)\r?\n---") {
+    if (-not ($Content -match "^---\r?\n([\s\S]*?)\r?\n---")) {
+        $ActualErrors += "Missing YAML frontmatter delimiters"
+    } else {
         $Frontmatter = $Matches[1]
+        
+        # Name check
         if ($Frontmatter -match "name:\s*([^\r\n]+)") {
-            $SkillName = $Matches[1].Trim()
+            $SkillName = $Matches[1].Trim().Trim('"').Trim("'")
+            if ($SkillName.Length -gt 64) {
+                $ActualErrors += "Name exceeds 64 characters"
+            }
             if (-not ($SkillName -cmatch "^[a-z0-9]+(-[a-z0-9]+)*$")) {
-                if ($TestCase.ExpectedError -match "regex") { $CaughtExpectedError = $true }
+                $ActualErrors += "does not match agentskills.io regex"
             }
             if ($SkillName -ne $TestCase.Dir) {
-                if ($TestCase.ExpectedError -match "directory") { $CaughtExpectedError = $true }
+                $ActualErrors += "does not match directory"
             }
         } else {
-            if ($TestCase.ExpectedError -match "'name'") { $CaughtExpectedError = $true }
+            $ActualErrors += "Missing required 'name' field"
         }
 
-        if (-not ($Frontmatter -match "description:\s*([^\r\n]+)")) {
-            if ($TestCase.ExpectedError -match "'description'") { $CaughtExpectedError = $true }
+        # Description check
+        if ($Frontmatter -match "description:\s*([^\r\n]+)") {
+            $Description = $Matches[1].Trim().Trim('"').Trim("'")
+            if ($Description.Length -gt 1024) {
+                $ActualErrors += "Description exceeds 1024 characters"
+            }
+            if ($Description.Length -eq 0) {
+                $ActualErrors += "Description is empty"
+            }
+        } else {
+            $ActualErrors += "Missing required 'description' field"
         }
     }
 
-    if (-not ($Content -match "1\. Overview & Capability")) {
-        if ($TestCase.ExpectedError -match "mandatory section") { $CaughtExpectedError = $true }
+    # Mandatory Sections check
+    $RequiredSections = @(
+        "1. Overview & Capability",
+        "2. When to Use & When NOT to Use",
+        "3. Required Inputs & Prerequisites",
+        "4. Step-by-Step Deterministic Workflow",
+        "5. Expected Outputs & Artifact Formats",
+        "6. Quality & Verification Checklist",
+        "7. Common Mistakes & Pitfalls",
+        "8. Real-World Example Walkthrough",
+        "9. Related Skills & Hand-Offs",
+        "10. Tool Compatibility & Limitations"
+    )
+    foreach ($Section in $RequiredSections) {
+        if (-not ($Content -match [regex]::Escape($Section))) {
+            $ActualErrors += "Missing mandatory section"
+            break
+        }
+    }
+
+    foreach ($Err in $ActualErrors) {
+        if ($Err -match [regex]::Escape($TestCase.ExpectedError)) {
+            $CaughtExpectedError = $true
+            break
+        }
     }
 
     if ($CaughtExpectedError) {
         Write-Host "PASS [Negative Case]: '$($TestCase.Name)' properly rejected with expected error: $($TestCase.ExpectedError)" -ForegroundColor Green
         $NegativePassCount++
     } else {
-        Write-Host "FAIL [Negative Case]: '$($TestCase.Name)' was NOT rejected as expected!" -ForegroundColor Red
+        Write-Host "FAIL [Negative Case]: '$($TestCase.Name)' was NOT rejected as expected! (Actual: $($ActualErrors -join ', '))" -ForegroundColor Red
     }
 }
 
 Remove-Item -Path $TempDir -Recurse -Force | Out-Null
 
-Write-Host "`nNegative Test Suite Complete: $NegativePassCount/$($Cases.Count) passed." -ForegroundColor Cyan
+Write-Host "`n================================================================" -ForegroundColor Cyan
+Write-Host "Negative Test Suite Complete: $NegativePassCount/$($Cases.Count) passed." -ForegroundColor $(if ($NegativePassCount -eq $Cases.Count) { "Green" } else { "Red" })
+Write-Host "================================================================" -ForegroundColor Cyan
+
 if ($NegativePassCount -eq $Cases.Count) { exit 0 } else { exit 1 }

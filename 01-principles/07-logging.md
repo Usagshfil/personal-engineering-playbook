@@ -28,8 +28,8 @@ When an application is running on a user's phone or in production, you cannot at
 ---
 
 ## 5. When NOT to Use It (Anti-Complexity Limits)
-*   **Logcat Flooding**: Never log inside tight loops or 60fps rendering passes (e.g. logging scroll coordinates or every frame rendered in Compose).
-*   **`println()` in Production**: Never use raw `println()` or `System.out.println()`. Always use a structured logging framework (like `Timber` in Android or `SLF4J`/`Logback` in backend systems) that can be stripped or rerouted per build variant.
+*   **High-Frequency Console Flooding**: Never log inside tight loops, animation frames, or high-frequency rendering passes (e.g. logging every pixel coordinate or frame tick in UI components).
+*   **`println()` in Production**: Never use raw `println()` or `console.log()` in production. Always use a structured logging framework (like `Timber` in Android, `Winston`/`Pino` in Node.js, `SLF4J`/`Logback` in Java/Kotlin backend, or `logging` in Python) that can be stripped or rerouted per build environment.
 
 ---
 
@@ -39,13 +39,13 @@ When an application is running on a user's phone or in production, you cannot at
 | :--- | :--- |
 | **Filtered by Environment**: Debug logs vanish in release. | **Leaks in Production**: Output visible in release logcat. |
 | **Searchable Metadata**: Tags and log levels make filtering instant. | **Unformatted Mess**: Difficult to parse or filter in terminal. |
-| **Crash Report Integration**: Easily forwards breadcrumbs to Crashlytics. | **No Telemetry**: Lost when the app closes. |
+| **Crash Report Integration**: Easily forwards breadcrumbs to telemetry. | **No Telemetry**: Lost when the app closes. |
 
 ---
 
 ## 7. Practical Examples
 
-### Bad Example: Unstructured, Leaking Sensitive Data, Raw Prints
+### Bad Example: Unstructured, Leaking Sensitive Data, Raw Prints (Illustrative Implementation: Kotlin)
 ```kotlin
 // BAD: Leaks PII and auth credentials, uses println, no log level
 fun onLoginSubmitted(username: String, password: String, creditCard: String) {

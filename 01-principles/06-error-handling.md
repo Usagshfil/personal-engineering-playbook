@@ -21,8 +21,8 @@ Uncontrolled errors crash applications, corrupt user databases, and expose stack
 
 ## 4. When to Use It
 *   **System Boundaries**: Always wrap network calls, disk I/O, JSON parsing, and hardware sensors in structured error-handling constructs.
-*   **Domain Validation**: Use `require()` and `check()` preconditions to validate assumptions immediately upon receiving data.
-*   **Domain Models**: Represent business outcomes (e.g. `PaymentResult.Success`, `PaymentResult.InsufficientFunds`, `PaymentResult.CardExpired`) using sealed hierarchies.
+*   **Domain Validation**: Use precondition checks (e.g. `require()` / `check()` in Kotlin, assertion guards or schema validators in TypeScript/Python) to validate assumptions immediately upon receiving data.
+*   **Domain Models**: Represent business outcomes (e.g. `PaymentResult.Success`, `PaymentResult.InsufficientFunds`, `PaymentResult.CardExpired`) using sealed type hierarchies or tagged unions.
 
 ---
 
@@ -34,18 +34,18 @@ Uncontrolled errors crash applications, corrupt user databases, and expose stack
 
 ## 6. Advantages & Disadvantages
 
-| Typed Results (`Result<T>` / Sealed) | Blind Exceptions (`throw` / `catch`) |
+| Typed Results (`Result<T>` / Sealed Unions) | Blind Exceptions (`throw` / `catch`) |
 | :--- | :--- |
 | **Exhaustive Handling**: Compiler forces handling of errors. | **Invisible Failures**: Compiler gives no warning of uncaught exceptions. |
 | **Clear API Contract**: Function signature declares failure possibility. | **Hidden Surprises**: Any function can throw without warning. |
 | **High Performance**: No stack-trace unwinding overhead. | **Performance Cost**: Generating stack traces is slow. |
-| **Slight Boilerplate**: Requires unwrapping results (`when` / `fold`). | **Easy to Throw**: Fast to write initially, but fragile to maintain. |
+| **Slight Boilerplate**: Requires unwrapping results (`when` / `fold` / `switch`). | **Easy to Throw**: Fast to write initially, but fragile to maintain. |
 
 ---
 
 ## 7. Practical Examples
 
-### Bad Example: Swallowed Exceptions & Magic Nulls
+### Bad Example: Swallowed Exceptions & Magic Nulls (Illustrative Implementation: Kotlin)
 ```kotlin
 // BAD: Swallows exception, returns null, hides error cause
 class ProductRepository {

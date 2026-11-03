@@ -10,7 +10,7 @@ Database Design structures the persistent data tier of the application. It maps 
 ## 2. Inputs
 *   Domain Concept Model and Glossary from Phase 02.
 *   System Architecture Document (SAD) from Phase 06.
-*   Database Standards (`06-technologies/database/`).
+*   Database Standards ([`06-technologies/README.md`](../06-technologies/README.md)).
 
 ---
 

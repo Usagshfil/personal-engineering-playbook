@@ -34,7 +34,7 @@ The **Testing and QA Skill** guides the systematic verification of software syst
 ## 3. Required Inputs & Prerequisites
 *   Source code files under test.
 *   User stories with Gherkin acceptance criteria from `requirement-engineering`.
-*   Testing libraries configured in `build.gradle.kts` (JUnit 4/5, MockK, Turbine, Coroutines Test).
+*   Testing libraries configured in project dependencies (e.g. JUnit 4/5, MockK, Turbine for Android/Kotlin; Jest/Vitest for Web; pytest for Python). Refer to [`06-technologies/README.md`](../../06-technologies/README.md).
 
 ---
 

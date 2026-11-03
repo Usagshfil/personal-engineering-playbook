@@ -13,16 +13,19 @@ Poorly designed functions and classes become tangled webs of mutable state and h
 ---
 
 ## 3. Why It Matters
-*   **Predictability**: An immutable data class (`val` instead of `var`) cannot have its fields mysteriously changed by a background thread or a downstream function.
+*   **Predictability**: An immutable data structure cannot have its fields mysteriously changed by a background thread, an event handler, or a downstream function.
 *   **Testability**: Pure functions that take explicit inputs and return outputs without mutating global variables can be unit tested in isolation without mocks or complex setup.
 *   **Composability**: Small, focused functions can be easily reused and combined like Lego bricks.
 
 ---
 
 ## 4. When to Use It
-*   **Universal Rule**: Prefer `val` over `var` in Kotlin. Use immutable collections (`List` over `MutableList`) by default.
+*   **Universal Invariant (Immutability by Default)**: Default to immutable data bindings and read-only data structures across all languages:
+    *   *Kotlin*: Prefer `val` over `var`; default to `List` over `MutableList`.
+    *   *TypeScript / JavaScript*: Prefer `const` over `let`/`var`; use `readonly` collections and frozen objects.
+    *   *Python*: Prefer frozen `dataclass` or immutable `tuple`/`frozenset`.
 *   **Small Functions**: Target functions that fit on a single screen without scrolling (ideally 10–25 lines).
-*   **Parameter Limits**: Keep function parameter counts to $\le 3$. If a function requires 5 or 6 arguments, group them into a dedicated configuration or data class.
+*   **Parameter Limits**: Keep function parameter counts to $\le 3$. If a function requires 5 or 6 arguments, group them into a dedicated configuration or data object.
 
 ---
 

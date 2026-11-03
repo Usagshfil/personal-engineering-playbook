@@ -1,0 +1,42 @@
+name: Playbook Automated Validation Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-ubuntu:
+    name: Validation Suite (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Playbook Validation Suite
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/validate-playbook.ps1
+
+      - name: Run Negative Test Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File ./tools/test-validator-negative.ps1
+
+  validate-windows:
+    name: Validation Suite (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Playbook Validation Suite
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\validate-playbook.ps1
+
+      - name: Run Negative Test Harness
+        shell: pwsh
+        run: |
+          pwsh -ExecutionPolicy Bypass -File .\tools\test-validator-negative.ps1

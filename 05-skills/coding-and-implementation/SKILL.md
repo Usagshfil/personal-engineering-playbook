@@ -54,10 +54,10 @@ Deliver features end-to-end in cohesive layers rather than writing disconnected 
 2.  **Repository Tier**: Repository interface and offline-first implementation mapping raw entities to domain models.
 3.  **State / Coordinator Tier**: State holder exposing immutable observable state (e.g., `StateFlow<UiState>` on Android, Zustand/Redux on Web).
 4.  **UI Tier**: Pure presentation components with state hoisting and 4 UI states (e.g., Compose, React).
-*Delegate platform-specific conventions to the active Technology Standard (`06-technologies/`).*
+*Delegate platform-specific conventions to the active Technology Standard ([`06-technologies/README.md`](../../06-technologies/README.md); adhere to official language standards per interim fallback).*
 
 ### Step 3: Write Clean, Immutable Code
-1.  Declare variables as `val` by default; use `var` only when local mutation is unavoidable.
+1.  Declare variables as immutable by default (e.g., `val` in Kotlin, `const` in TypeScript); use mutable variables only when local accumulation is unavoidable.
 2.  Keep functions small ($\le 25$ lines) with $\le 3$ arguments.
 3.  Use guard clauses (early returns) to eliminate deep indentation:
     ```kotlin
@@ -66,8 +66,8 @@ Deliver features end-to-end in cohesive layers rather than writing disconnected 
 
 ### Step 4: Implement Typed Error Handling
 1.  Never swallow exceptions with empty catch blocks.
-2.  Return typed results (`Result<T>` or sealed domain interfaces).
-3.  Dispatch blocking I/O operations to `Dispatchers.IO`.
+2.  Return typed results (`Result<T>` or sealed domain interfaces) instead of throwing unchecked exceptions across layer boundaries.
+3.  Dispatch blocking I/O operations to appropriate background pools (e.g., `Dispatchers.IO` in Kotlin, asynchronous worker queues in backend systems).
 
 ### Step 5: Format & Lint
 1.  Run automated linter (`./gradlew ktlintCheck` or `spotlessCheck`).
