@@ -19,6 +19,6 @@ This backlog tracks future ideas, planned technology modules, and candidate skil
 ## 🛠️ Tooling & Framework Enhancements
 
 - [ ] **Interactive CLI Scaffolder**: Advanced Node.js or Go binary alternative to the PowerShell script for multi-platform developer machines.
-- [ ] **Automated Rule Linter**: GitHub Action to verify all `SKILL.md` files pass `agentskills.io` JSON schema validation.
+- [x] **Automated Rule Linter**: GitHub Actions workflow (`.github/workflows/validate-playbook.yml`) verifying link integrity, absolute path hygiene, and `agentskills.io` JSON schema compliance across Ubuntu and Windows runners.
 - [ ] **Obsidian / Logseq Knowledge Graph Config**: Optional `.obsidian` graph configuration for visualizing interconnected software engineering concepts.
 - [ ] **Code Snippet Playground**: Automated test runners verifying that code snippets embedded in guides actually compile and pass basic linting.
