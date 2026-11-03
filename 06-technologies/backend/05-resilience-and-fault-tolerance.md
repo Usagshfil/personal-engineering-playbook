@@ -10,13 +10,13 @@
 **Resilience and Fault Tolerance** is the architectural capability of a backend distributed system to anticipate, absorb, isolate, and gracefully recover from transient network blips, downstream outages, upstream traffic surges, and unexpected resource contention without cascading failure across the platform.
 
 Key resilience building blocks include:
-*   **Rate Limiting**: Throttling incoming traffic using distributed algorithms (Token Bucket or Leaky Bucket) backed by shared memory stores (Redis) to prevent denial of service and resource exhaustion.
-*   **Circuit Breakers**: Isolating unstable downstream dependencies by transitioning through Closed, Open, and Half-Open states to fail fast instead of consuming threads and connections waiting for unresponsive dependencies.
-*   **Retries with Exponential Backoff & Jitter**: Automatically retrying transient failures with exponentially increasing delays augmented with randomized jitter to prevent the "thundering herd" problem.
+*   **Context-Aware Rate Limiting**: Throttling incoming traffic using token/leaky bucket algorithms. Implemented at the API gateway or via distributed stores (Redis) across multiple dimensions (per-user, per-IP, per-tenant, per-API-key).
+*   **Circuit Breakers**: Isolating unstable remote dependencies by transitioning through Closed, Open, and Half-Open states to fail fast instead of consuming threads waiting for unresponsive downstreams.
+*   **Retries with Exponential Backoff & Jitter**: Automatically retrying transient failures on safe/idempotent operations with exponential backoff augmented with randomized Full Jitter to eliminate the "thundering herd" problem.
 *   **Deterministic Timeouts**: Enforcing strict, bounded deadlines on every downstream HTTP, gRPC, and database connection.
-*   **Idempotency Keys**: Guaranteeing that repeated requests carrying identical `Idempotency-Key` headers produce identical side effects without duplicate processing.
+*   **Effectively-Once Idempotency Keys**: Guaranteeing that repeated mutating requests carrying identical `Idempotency-Key` headers produce identical side effects without duplicate processing, supported by payload fingerprinting.
 
-$$\text{Client} \xrightarrow[\text{Idempotency-Key}]{\text{Request}} \underbrace{\text{Rate Limiter}}_{\text{Redis Token Bucket}} \longrightarrow \underbrace{\text{Service}}_{\text{Timeout Budget}} \xrightarrow[\text{Closed / Open / Half-Open}]{\text{Circuit Breaker}} \underbrace{\text{Downstream API}}_{\text{Backoff + Jitter}}$$
+$$\text{Client} \xrightarrow[\text{Idempotency-Key}]{\text{Request}} \underbrace{\text{Rate Limiter}}_{\text{Gateway or Redis}} \longrightarrow \underbrace{\text{Service}}_{\text{Timeout Budget}} \xrightarrow[\text{Closed / Open / Half-Open}]{\text{Circuit Breaker}} \underbrace{\text{Downstream API}}_{\text{Backoff + Jitter}}$$
 
 ---
 
@@ -25,7 +25,7 @@ $$\text{Client} \xrightarrow[\text{Idempotency-Key}]{\text{Request}} \underbrace
 The purpose of these standards is to:
 1.  **Prevent Cascading Failures**: Ensure that a latency spike or outage in a non-critical downstream dependency does not consume all worker threads, pool connections, and crash the primary service.
 2.  **Safeguard Resource Availability**: Protect backend memory, CPU, and database connection pools from intentional or unintentional denial-of-service traffic spikes.
-3.  **Guarantee Safe Replayability**: Enable clients and network intermediaries to safely retry failed requests without creating duplicate charges, phantom records, or inconsistent mutations.
+3.  **Guarantee Effectively-Once Replayability**: Enable clients and network intermediaries to safely retry failed requests without creating duplicate charges, phantom records, or inconsistent mutations.
 4.  **Standardize Upstream Feedback**: Provide unambiguous HTTP signaling (`429 Too Many Requests`, `503 Service Unavailable`, `Retry-After`) with standardized headers so consuming clients can pace requests gracefully.
 
 ---
@@ -42,11 +42,28 @@ In distributed systems, network calls over TCP/IP will eventually fail or experi
 
 ## 4. When to Use It
 
-Engineers `MUST` implement these resilience mechanisms when:
-*   Making remote network calls (HTTP, gRPC, database, cache) across service boundaries.
-*   Exposing public or multi-tenant API endpoints susceptible to traffic bursts or abuse.
-*   Executing stateful, non-idempotent operations (e.g., credit card charges, order placement, document signing).
-*   Integrating with external third-party partner APIs with documented rate limits or SLAs.
+### Normative Engineering Rules (RFC 2119)
+
+*   **Rate Limiting Dimensions & Failure Policy (SHOULD)**:
+    *   Protect endpoints across multiple dimensions: per-IP for unauthenticated endpoints, per-user/per-tenant for authenticated APIs, and per-client-key for partner APIs.
+    *   **Redis Failure Policy**: Services `SHOULD` define an explicit failure posture when the rate-limiting store is unreachable:
+        *   *Fail Open* for public read endpoints to maintain availability.
+        *   *Fail Closed* for high-risk write endpoints (e.g. login, payment checkout) to prevent abuse during infrastructure degradation.
+    *   Small or monolithic services `MAY` rely on API gateway rate limiting without embedding distributed Redis logic inside application services.
+*   **Circuit Breakers on Remote Outbound Calls (SHOULD)**:
+    *   Wrap remote HTTP/gRPC dependencies in circuit breakers with configured failure thresholds (e.g. 5 consecutive failures or 50% failure rate over 10s) and reset timeouts (e.g. 30s).
+    *   In the **Half-Open** state, the circuit allows a single canary probe through; if successful, it closes the circuit; if failed, it re-opens the circuit immediately.
+*   **Method Retry Safety & Retry Budgets (MUST)**:
+    *   **Safe / Idempotent Methods (GET, HEAD, OPTIONS, PUT, DELETE)**: Safe to retry on transient network errors (`ECONNRESET`, `ETIMEDOUT`) and 503/429 responses.
+    *   **Non-Idempotent Methods (POST, PATCH)**: **MUST NOT** be automatically retried unless accompanied by an verified `Idempotency-Key` or database de-duplication constraint.
+    *   **Retry Budget**: Enforce a maximum retry budget (e.g. max 3 attempts, max total retry duration $\le 5000\text{ms}$) to prevent unbounded latency accumulation.
+*   **Effectively-Once Idempotency Guarantees (MUST)**:
+    *   Mutating endpoints (e.g. `POST /v1/orders`, `POST /v1/payments`) **MUST** accept an `Idempotency-Key` header.
+    *   **Atomic Acquisition**: The server **MUST** atomically acquire the key (e.g. Redis `SET key in_flight NX EX 60` or SQL `INSERT ... ON CONFLICT DO NOTHING`) before processing.
+    *   **Concurrent Request Handling**: If a concurrent request arrives while processing is in flight, the server **MUST** return `409 Conflict` (Problem Details: Request In Progress).
+    *   **Payload Fingerprinting (SHA-256)**: The server **MUST** hash the request payload. If an incoming request uses an existing key with a *different* body fingerprint, the server **MUST** reject it with `422 Unprocessable Content` (Problem Details: Idempotency Key Payload Mismatch).
+    *   **Durable Persistence & TTL**: After successful execution, the server **MUST** atomically persist the final status code, headers, and response body with an explicit expiration TTL (e.g. 24–72 hours). Subsequent identical requests return the cached response with `X-Cache-Replay: true`.
+    *   **Crash Recovery**: The initial lock `MUST` have a short TTL (e.g. 30–60 seconds) so that if a worker crashes before persisting the response, the lock expires rather than remaining permanently jammed.
 
 ---
 

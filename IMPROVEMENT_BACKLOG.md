@@ -21,4 +21,6 @@ This backlog tracks future ideas, planned technology modules, and candidate skil
 - [ ] **Interactive CLI Scaffolder**: Advanced Node.js or Go binary alternative to the PowerShell script for multi-platform developer machines.
 - [x] **Automated Rule Linter**: GitHub Actions workflow (`.github/workflows/validate-playbook.yml`) verifying link integrity, absolute path hygiene, and `agentskills.io` JSON schema compliance across Ubuntu and Windows runners.
 - [ ] **Obsidian / Logseq Knowledge Graph Config**: Optional `.obsidian` graph configuration for visualizing interconnected software engineering concepts.
-- [ ] **Code Snippet Playground**: Automated test runners verifying that code snippets embedded in guides actually compile and pass basic linting.
+- [x] **Backend Reference API Verifier**: Automated verifier (`tools/test-backend-example.ps1`) executing clean-clone contract, schema, idempotency, and test coverage validation.
+- [ ] **Tier 2 Cross-Domain Consistency Review**: Post-Milestone 4 audit aligning transaction, validation, auth, error handling, logging, and retry rules across Android, Web, Backend, and Database domains.
+- [ ] **Priority 4 Database & Persistence 7-Guide Expansion**: Comprehensive 7-guide catalog covering governance, schema design, indexing, safe migrations, transactions/concurrency, connection pooling, and data security/backup/recovery with executable SQL migration tests.

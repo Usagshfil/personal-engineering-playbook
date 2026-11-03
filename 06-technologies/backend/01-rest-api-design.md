@@ -47,10 +47,16 @@ The purpose of this standard is to guarantee predictable, interoperable, backwar
 
 ### Normative Engineering Rules (RFC 2119)
 
+*   **HTTP Semantics vs. API Conventions**:
+    *   **RFC 9110** defines the underlying transport semantics (method safety, idempotency, caching, header processing, and status codes). Adherence to RFC 9110 semantics is a **MUST**.
+    *   **URI Path Design** represents architectural and resource design conventions. These conventions determine how resources are organized and addressed.
 *   **Resource Naming Conventions (MUST)**:
     *   URIs **MUST** use plural nouns representing resources, never verbs: `/v1/users`, `/v1/invoices`, `/v1/subscriptions`.
     *   URIs **MUST** use kebab-case for multi-word paths: `/v1/user-profiles`, `/v1/payment-methods`.
-    *   Nesting depth **MUST NOT** exceed 2 levels: `/v1/authors/{authorId}/books` is acceptable; `/v1/authors/{authorId}/books/{bookId}/chapters/{chapterId}/paragraphs` is strictly prohibited. For deeply nested entities, use top-level collections with query filters: `/v1/chapters?bookId={bookId}`.
+*   **Resource Hierarchy & Nesting Depth (SHOULD)**:
+    *   Prefer shallow, readable resource hierarchies ($\le 2$ levels): `/v1/authors/{authorId}/books` is standard.
+    *   Deeper nesting (e.g. `/v1/accounts/{accountId}/projects/{projectId}/members`) is **PERMITTED (MAY)** when the parent-child ownership relationship is unambiguous and access control requires strict hierarchical scoping.
+    *   Where relationships are loosely coupled or when sub-resources can be addressed directly, **SHOULD** flatten into top-level collections with query parameter scoping: `/v1/members?projectId={projectId}`.
 *   **HTTP Method Discipline (MUST)**:
     *   `GET`: Safe and idempotent. **MUST NOT** alter persistent server state.
     *   `POST`: Non-idempotent creation or processing. **MUST** return `201 Created` with a `Location: /v1/orders/{id}` header upon successful creation.

@@ -1,0 +1,20 @@
+{
+  "name": "representative-backend-api",
+  "version": "1.0.0",
+  "description": "Representative Backend API Reference Implementation & Test Suite",
+  "main": "representative-api.ts",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

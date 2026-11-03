@@ -72,9 +72,15 @@ try {
     powershell -ExecutionPolicy Bypass -File $NegativeScript
     $NegativeExitCode = $LASTEXITCODE
 
+    # 8. Run backend representative API verifier on clean clone
+    Write-Host "`n--- Executing test-backend-example.ps1 in Clean Clone ---" -ForegroundColor Yellow
+    $BackendExampleScript = Join-Path $TempCloneDir "tools\test-backend-example.ps1"
+    powershell -ExecutionPolicy Bypass -File $BackendExampleScript -PlaybookRoot $TempCloneDir
+    $BackendExampleExitCode = $LASTEXITCODE
+
     Write-Host "`n================================================================" -ForegroundColor Cyan
-    Write-Host "Clean Clone Results: Validator ExitCode=$ValidatorExitCode, Positive ExitCode=$PositiveExitCode, Negative ExitCode=$NegativeExitCode"
-    if ($ValidatorExitCode -eq 0 -and $PositiveExitCode -eq 0 -and $NegativeExitCode -eq 0) {
+    Write-Host "Clean Clone Results: Validator ExitCode=$ValidatorExitCode, Positive ExitCode=$PositiveExitCode, Negative ExitCode=$NegativeExitCode, Backend ExitCode=$BackendExampleExitCode"
+    if ($ValidatorExitCode -eq 0 -and $PositiveExitCode -eq 0 -and $NegativeExitCode -eq 0 -and $BackendExampleExitCode -eq 0) {
         Write-Host "CLEAN CLONE VERIFICATION PASSED! Repository is fully reproducible." -ForegroundColor Green
         $FinalResult = 0
     } else {

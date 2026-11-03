@@ -10,7 +10,11 @@
 
 **Backend Security Architecture** distinguishes between **Authentication (AuthN)**—verifying *who* an entity is—and **Authorization (AuthZ)**—verifying *what* an authenticated entity is permitted to do.
 
-Modern services standardize on **OAuth 2.0 / OpenID Connect (OIDC)** for identity federation, **stateless JSON Web Tokens (JWTs)** with short lifespans ($\le 15\text{m}$) for API access, and **Policy-Based Access Control (RBAC / ABAC)** enforcing least privilege at every service boundary.
+Modern backend services standardize on:
+*   **OAuth 2.0 / OpenID Connect (OIDC)** for identity federation, token issuance, and delegation.
+*   **Policy-Driven JSON Web Tokens (JWTs)**: Short-lived access tokens configured according to threat model and client type, verified cryptographically via asymmetric keys (JWKS).
+*   **Token Rotation & Revocation**: Refresh Token Rotation (RTR) with reuse detection paired with centralized session or revocation caches.
+*   **Object-Level Authorization (BOLA/IDOR Defense)**: Verifying tenant and resource ownership on *every* single database access. **A valid JWT proves identity, but NEVER proves permission to access a specific resource.**
 
 ```
 +-------------------------------------------------------------------------+
@@ -20,13 +24,14 @@ Modern services standardize on **OAuth 2.0 / OpenID Connect (OIDC)** for identit
 |    |                                                                    |
 |    v                                                                    |
 | [ Auth Middleware ] (Authentication - AuthN)                            |
-|    |---> Validate Signature against Asymmetric Public Key (RS256)       |
-|    |---> Verify Claims: iss (Issuer), aud (Audience), exp (Expiry <=15m) |
+|    |---> Validate Signature against Asymmetric JWKS (RS256/ES256) via kid|
+|    |---> Strict Verification: iss (Issuer), aud (Audience), exp (Expiry) |
+|    |---> Algorithm Pinning: Strictly reject 'none' & symmetric fallback |
 |    `---> Reject expired / invalid token with 401 Unauthorized           |
 |                                                                         |
 | [ Policy Enforcement Guard ] (Authorization - AuthZ)                    |
-|    |---> Check Role: Does user possess 'admin' role? (RBAC)             |
-|    |---> Check Ownership: Does user own target resource? (BOLA Defense)  |
+|    |---> Role/Scope Check: Does user hold required permission? (RBAC)   |
+|    |---> Object Ownership Check: Does user own target resource? (BOLA)  |
 |    `---> Reject unauthorized access with 403 Forbidden                 |
 |                                                                         |
 | Controller / Domain Service (Executes authorized business logic)        |
@@ -37,16 +42,16 @@ Modern services standardize on **OAuth 2.0 / OpenID Connect (OIDC)** for identit
 
 ## 2. Purpose
 
-The purpose of this standard is to prevent **Broken Authentication (OWASP API2)** and **Broken Object Level Authorization (OWASP API1 / BOLA)**, eliminate credential theft risks through short token lifespans, and enforce the Principle of Least Privilege across all API endpoints.
+The purpose of this standard is to prevent **Broken Authentication (OWASP API2)** and **Broken Object Level Authorization (OWASP API1 / BOLA)**, eliminate credential theft risks through policy-driven token lifespans and refresh rotation, and enforce the Principle of Least Privilege across all API endpoints.
 
 ---
 
 ## 3. Why It Matters
 
-*   **Mitigating Stolen Token Blast Radius**: Long-lived access tokens (e.g. 30 days) remain valid even if an attacker intercepts them or a user changes their password. Short-lived access tokens ($\le 15\text{m}$) combined with refresh token rotation drastically limit the vulnerability window.
-*   **BOLA / IDOR Prevention (OWASP API #1 Vulnerability)**: Verifying that a user is logged in is insufficient; an attacker can simply change `/v1/invoices/100` to `/v1/invoices/101`. Authorization guards must verify that the authenticated caller owns or has explicit permission to access the target entity.
-*   **Zero Trust Architecture**: Internal microservices cannot assume requests are trustworthy simply because they originated within the internal network. Requests across service boundaries must carry verified cryptographic identity tokens.
-*   **Auditability & Compliance**: Standardized identity claims (`sub`, `tenant_id`, `scope`) ensure all database mutations and security logs can be conclusively traced back to an authorized actor.
+*   **Policy-Driven Blast Radius Reduction**: The lifetime of an access token determines how long an intercepted credential can be abused. While long-lived tokens (e.g. 30 days) create unacceptable exposure, setting a rigid 15-minute rule without analyzing client type (public SPA vs. native mobile vs. backend worker) overlooks operational realities. Token lifespans `MUST` be policy-driven based on risk profile, supported by automated refresh token rotation.
+*   **BOLA / IDOR Prevention (OWASP API #1 Vulnerability)**: Verifying that a JWT is cryptographically valid is only step one; an attacker with a valid token for User A can still attempt to query `/v1/invoices/userB_999`. Authorization guards and repositories must verify that the authenticated caller owns or has explicit permission to access the target entity.
+*   **Zero Trust Architecture**: Internal microservices cannot assume requests are trustworthy simply because they originated within the internal VPC. Requests across service boundaries must carry verified cryptographic identity tokens with strict audience (`aud`) and issuer (`iss`) checks.
+*   **Key Lifecycle Management**: Signing keys must rotate periodically without causing downtime. Adopting the JSON Web Key Set (JWKS) standard with key identifiers (`kid`) ensures seamless key rotation.
 
 ---
 
@@ -54,27 +59,32 @@ The purpose of this standard is to prevent **Broken Authentication (OWASP API2)*
 
 ### Normative Engineering Rules (RFC 2119)
 
-*   **Token Lifespans & Storage (MUST)**:
-    *   Stateless JWT access tokens **MUST** have an expiration (`exp`) $\le 15\text{ minutes}$.
-    *   Refresh tokens **MUST** be stored in secure, `HttpOnly`, `SameSite=Strict`, `Secure` cookies (for web clients) or secure OS keystores (for mobile clients).
-    *   Refresh token requests **MUST** implement **Refresh Token Rotation (RTR)**: Every time a refresh token is exchanged, the old token is invalidated and a new pair is issued. Re-use of an invalidated refresh token must immediately revoke all tokens in that family.
-*   **Cryptographic Signature & Algorithm Pinning (MUST)**:
-    *   Services **MUST** enforce explicit algorithm pinning (e.g. `RS256`, `ES256`, or `EdDSA`).
+*   **Policy-Driven Token Lifespans & Storage (MUST)**:
+    *   **Access Token Lifetime (SHOULD)**: Default to short lifespans ($\le 15\text{ minutes}$ for interactive public web/mobile clients; $\le 60\text{ minutes}$ for backend service-to-service). Configure according to client risk, refresh mechanism, and revocation tolerance.
+    *   **Refresh Token Lifetime & Storage (MUST)**: Refresh tokens (lifespan: 7–30 days) **MUST** be stored in `HttpOnly`, `SameSite=Strict`, `Secure` cookies (web) or OS Keystore/Keychain (mobile). Never store in `localStorage`.
+    *   **Refresh Token Rotation & Reuse Detection (MUST)**: Every refresh request invalidates the consumed refresh token and issues a new pair. If an already-consumed refresh token is presented, the authorization server **MUST** detect token reuse and immediately invalidate the entire token family (revoking all active sessions for that user).
+*   **Cryptographic Verification & Key Rotation (MUST)**:
+    *   Services **MUST** enforce explicit algorithm allowlisting (e.g. `RS256`, `ES256`, or `EdDSA`).
     *   Services **MUST** explicitly reject tokens signed with the `none` algorithm or mismatched symmetric/asymmetric algorithms (preventing algorithm confusion attacks).
-    *   Services **MUST** validate `iss` (Issuer), `aud` (Audience), and `nbf` (Not Before) claims.
+    *   Services **MUST** validate `iss` (Issuer), `aud` (Audience), and `nbf` (Not Before) claims on every request.
+    *   Key rotation **MUST** use standard JWKS (`/.well-known/jwks.json`) with `kid` (Key ID) header lookup. The key cache **MUST** support cache-aside refresh to gracefully accept new keys without service restart.
+*   **Revocation & Session Invalidation (SHOULD)**:
+    *   High-security applications requiring instant revocation **SHOULD** maintain a low-latency revocation blocklist (Redis with TTL equal to access token remaining duration) or perform session state checks on sensitive operations (password changes, privilege escalation).
 *   **Object-Level Authorization / BOLA Defense (MUST)**:
     *   Endpoints accessing resources by ID **MUST** verify that the authenticated caller owns the resource or has an authorized organizational tenancy role.
-    *   Never query records by client ID alone (`findById(id)`); always include ownership constraints in the database query:
+    *   Never query records by client-supplied ID alone (`findById(id)`); always enforce ownership constraints in the database query:
         ```typescript
         // MUST: Query includes tenant/owner boundary
         const invoice = await db.invoice.findFirst({
           where: { id: invoiceId, organizationId: authUser.orgId },
         });
+        if (!invoice) {
+          throw new NotFoundException('Invoice not found'); // Avoid leaking existence
+        }
         ```
-*   **Role-Based Access Control (RBAC) (SHOULD)**:
-    *   Assign permissions hierarchically to roles (`viewer`, `editor`, `admin`).
-    *   Protect endpoints using declarative middleware guards (`@Roles('admin')`).
-*   **Machine-to-Machine Authentication (SHOULD)**: Use OAuth 2.0 Client Credentials flow with mutual TLS (mTLS) or signed internal service tokens for service-to-service communication.
+*   **Role-Based & Attribute-Based Access Control (RBAC/ABAC) (SHOULD)**:
+    *   Assign permissions hierarchically to roles (`viewer`, `editor`, `admin`) or evaluate dynamic attributes (department, IP range, time of day).
+    *   Protect endpoints using declarative middleware guards (`@RequirePermission('invoice:read')`).
 
 ---
 

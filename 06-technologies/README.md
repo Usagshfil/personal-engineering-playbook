@@ -29,7 +29,7 @@ The following four technology domains are scheduled for comprehensive implementa
 | **Android** | **Priority 1** | Kotlin, Jetpack Compose, Coroutines/Flow, Room Database, Hilt/Koin DI, Android Architecture Recommendations | [Android Standards](android/README.md) (8 guides) | **Active (Completed)** |
 | **Web Frontend** | **Priority 2** | TypeScript, React 19, Vite/Next.js, Tailwind CSS, Modern Web APIs, Web Performance (CWV) | [Web Standards](web/README.md) (6 guides) | **Active (Completed)** |
 | **Backend & APIs** | **Priority 3** | RESTful API Design, RFC 9110, Node.js / Go / Spring Boot, OAuth2/OIDC, Resilience & Observability | [Backend Standards](backend/README.md) (6 guides) | **Active (Completed)** |
-| **Database & Persistence** | **Priority 4** | Relational SQL (PostgreSQL, SQLite), 3NF Normalization, Indexing Strategies, Safe Schema Migrations, Connection Pooling | `06-technologies/database/` (5 guides) | Planned (M4) |
+| **Database & Persistence** | **Priority 4** | Relational SQL (PostgreSQL, SQLite), 3NF Normalization, Indexing Strategies, Safe Migrations, Concurrency, Pooling, Backup/Recovery | `06-technologies/database/` (7 guides) | Planned (M4) |
 
 ---
 

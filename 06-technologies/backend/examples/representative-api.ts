@@ -4,7 +4,7 @@
  * Demonstrates:
  * 1. Controller -> Service -> Domain -> Repository clean layering.
  * 2. Zod boundary schema validation with RFC 9457 Problem Details error responses.
- * 3. Idempotency-Key handling with concurrent in-flight locking and response replay.
+ * 3. Idempotency-Key handling with concurrent in-flight locking, payload fingerprinting (SHA-256), and response replay.
  * 4. Structured JSON logging with W3C Trace Context correlation and PII redaction.
  * 5. Deterministic Unit of Work / Transaction boundary.
  */
@@ -141,9 +141,15 @@ export interface UnitOfWork {
   execute<T>(work: () => Promise<T>): Promise<T>;
 }
 
+export interface CachedIdempotencyRecord {
+  statusCode: number;
+  body: any;
+  payloadHash: string;
+}
+
 export interface IdempotencyStore {
-  get(key: string): Promise<{ statusCode: number; body: any } | null>;
-  set(key: string, statusCode: number, body: any, ttlSeconds: number): Promise<void>;
+  get(key: string): Promise<CachedIdempotencyRecord | null>;
+  set(key: string, record: CachedIdempotencyRecord, ttlSeconds: number): Promise<void>;
   acquireLock(key: string, ttlSeconds: number): Promise<boolean>;
   releaseLock(key: string): Promise<void>;
 }
@@ -263,9 +269,27 @@ export class OrderHttpController {
       };
     }
 
-    // 2. Check cached idempotent response
+    // 2. Compute payload SHA-256 fingerprint
+    const payloadHash = crypto.createHash('sha256').update(JSON.stringify(req.body || {})).digest('hex');
+
+    // 3. Check cached idempotent response & payload match
     const cachedResponse = await this.idempotencyStore.get(idempotencyKey);
     if (cachedResponse) {
+      if (cachedResponse.payloadHash !== payloadHash) {
+        logger.warn('Idempotency key payload mismatch', { trace_id: traceId, idempotency_key: idempotencyKey });
+        return {
+          status: 422,
+          headers: { 'Content-Type': 'application/problem+json', 'X-Trace-ID': traceId },
+          body: {
+            type: 'https://api.example.com/errors/idempotency-payload-mismatch',
+            title: 'Unprocessable Content',
+            status: 422,
+            detail: 'The Idempotency-Key was previously used with a different request payload.',
+            instance: req.path,
+          } as ProblemDetails,
+        };
+      }
+
       logger.info('Returning cached idempotent response', { trace_id: traceId, idempotency_key: idempotencyKey });
       return {
         status: cachedResponse.statusCode,
@@ -278,7 +302,7 @@ export class OrderHttpController {
       };
     }
 
-    // 3. Acquire concurrent in-flight lock
+    // 4. Acquire concurrent in-flight lock (short TTL for crash recovery)
     const lockAcquired = await this.idempotencyStore.acquireLock(idempotencyKey, 30);
     if (!lockAcquired) {
       return {
@@ -295,7 +319,7 @@ export class OrderHttpController {
     }
 
     try {
-      // 4. Validate input against schema
+      // 5. Validate input against schema
       const parseResult = CreateOrderRequestSchema.safeParse(req.body);
       if (!parseResult.success) {
         const problem: ProblemDetails = {
@@ -316,7 +340,7 @@ export class OrderHttpController {
         };
       }
 
-      // 5. Execute application service workflow
+      // 6. Execute application service workflow
       const order = await this.orderService.createOrder(parseResult.data);
 
       const responsePayload = {
@@ -326,8 +350,12 @@ export class OrderHttpController {
         createdAt: order.createdAt.toISOString(),
       };
 
-      // 6. Cache successful idempotent response (e.g. 24 hour TTL)
-      await this.idempotencyStore.set(idempotencyKey, 201, responsePayload, 86400);
+      // 7. Durably cache successful idempotent response with payload hash (24h TTL)
+      await this.idempotencyStore.set(
+        idempotencyKey,
+        { statusCode: 201, body: responsePayload, payloadHash },
+        86400
+      );
 
       logger.info('Order created successfully', { trace_id: traceId, order_id: order.id });
 
@@ -375,5 +403,55 @@ export class OrderHttpController {
     } finally {
       await this.idempotencyStore.releaseLock(idempotencyKey);
     }
+  }
+}
+
+// ============================================================================
+// 7. IN-MEMORY TEST ADAPTERS (For Unit & Integration Testing)
+// ============================================================================
+
+export class InMemoryOrderRepository implements OrderRepository {
+  private readonly storage = new Map<string, Order>();
+  async findById(id: string): Promise<Order | null> {
+    return this.storage.get(id) || null;
+  }
+  async save(order: Order): Promise<void> {
+    this.storage.set(order.id, order);
+  }
+}
+
+export class InMemoryInventoryRepository implements InventoryRepository {
+  constructor(private readonly inventory: Map<string, number> = new Map()) {}
+  async reserve(itemId: string, quantity: number): Promise<boolean> {
+    const current = this.inventory.get(itemId) ?? 0;
+    if (current < quantity) return false;
+    this.inventory.set(itemId, current - quantity);
+    return true;
+  }
+}
+
+export class DirectUnitOfWork implements UnitOfWork {
+  async execute<T>(work: () => Promise<T>): Promise<T> {
+    return await work();
+  }
+}
+
+export class InMemoryIdempotencyStore implements IdempotencyStore {
+  private readonly records = new Map<string, CachedIdempotencyRecord>();
+  private readonly activeLocks = new Set<string>();
+
+  async get(key: string): Promise<CachedIdempotencyRecord | null> {
+    return this.records.get(key) || null;
+  }
+  async set(key: string, record: CachedIdempotencyRecord, _ttlSeconds: number): Promise<void> {
+    this.records.set(key, record);
+  }
+  async acquireLock(key: string, _ttlSeconds: number): Promise<boolean> {
+    if (this.activeLocks.has(key)) return false;
+    this.activeLocks.add(key);
+    return true;
+  }
+  async releaseLock(key: string): Promise<void> {
+    this.activeLocks.delete(key);
   }
 }

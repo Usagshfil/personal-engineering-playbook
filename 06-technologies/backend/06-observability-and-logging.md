@@ -7,13 +7,16 @@
 
 ## 1. Definition & Core Concept
 
-**Observability** is the degree to which the internal execution state of a distributed backend system can be inferred solely by examining its external telemetry outputs. It is comprised of three core pillars:
+**Observability** is the degree to which the internal execution state of a distributed backend system can be inferred solely by examining its external telemetry outputs. It is comprised of four core pillars:
 *   **Structured JSON Logging**: Emitting human-readable and machine-indexable log events in canonical JSON format, annotated with correlation identifiers (`trace_id`, `span_id`), service identity, and contextual metadata.
 *   **Distributed Tracing**: Tracking a single user request across multiple microservices, message queues, and databases using the **W3C Trace Context** standard (`traceparent` header).
 *   **Metrics (RED Method)**: Aggregating numerical telemetry quantifying **R**ate (requests per second), **E**rrors (fraction of failing requests), and **D**uration (latency distribution across p50, p95, and p99 percentiles).
-*   **Health Checks**: Distinct HTTP probes for **Liveness** (`/healthz` - is the runtime process alive?) and **Readiness** (`/readyz` - are database connections and caches warmed up to accept traffic?).
+*   **The Health Probe Triad**: Unambiguously decoupled HTTP probes for:
+    *   **Liveness (`/healthz`)**: Is the application process loop alive and free of deadlocks?
+    *   **Readiness (`/readyz`)**: Can this instance currently accept user traffic (database pools connected, caches warmed)?
+    *   **Startup (`/startupz`)**: Is the instance still executing one-off initializations (migrations, warm-ups) before liveness checks engage?
 
-$$\text{Request Ingress} \xrightarrow[\text{W3C traceparent}]{\text{trace\_id}} \left[ \begin{array}{l} \text{Structured JSON Logs (with trace\_id)} \\ \text{RED Metrics (Rate, Errors, Duration)} \\ \text{Span Context Propagation} \end{array} \right] \longrightarrow \text{OpenTelemetry Collector}$$
+$$\text{Request Ingress} \xrightarrow[\text{W3C traceparent}]{\text{trace\_id}} \left[ \begin{array}{l} \text{Structured JSON Logs (Allowlisted Fields)} \\ \text{RED Metrics (Rate, Errors, Duration)} \\ \text{Span Context Propagation} \end{array} \right] \longrightarrow \text{OpenTelemetry Collector}$$
 
 ---
 
@@ -21,9 +24,9 @@ $$\text{Request Ingress} \xrightarrow[\text{W3C traceparent}]{\text{trace\_id}} 
 
 The purpose of these standards is to:
 1.  **Reduce Mean Time to Resolution (MTTR)**: Allow on-call engineers to correlate an alert on a 99th percentile latency spike to the exact distributed trace, culprit database query, or error log within seconds.
-2.  **Enforce Privacy & Security by Default**: Ensure strict adherence to [Tier 1 Universal Rule 7](../../AGENTS.md) by automatically masking passwords, authorization tokens, credit cards, and personally identifiable information (PII) before logs are written to disk or shipped off-host.
+2.  **Enforce Privacy & Security by Default (Defense-in-Depth)**: Ensure strict adherence to [Tier 1 Universal Rule 7](../../AGENTS.md). Prohibit logging secrets and personal data by design; automated redaction serves solely as a defense-in-depth safety net, not permission to log sensitive bodies.
 3.  **Standardize Telemetry Across Languages**: Establish consistent JSON schemas and metric names whether a service is written in TypeScript, Go, Kotlin, or Python.
-4.  **Facilitate Zero-Downtime Orchestration**: Provide accurate liveness and readiness signals to container orchestrators (Kubernetes, AWS ECS) during rollouts and pod restarts.
+4.  **Facilitate Zero-Downtime Orchestration**: Provide accurate signals to orchestrators (Kubernetes, AWS ECS) to eliminate restart storms during downstream outages.
 
 ---
 
@@ -33,17 +36,30 @@ Unstructured text logging and absent telemetry cause catastrophic operational pa
 *   **Unstructured Log Blobs**: Unformatted `console.log("Error occurred: " + err)` statements cannot be filtered, parsed, or alerted upon in log aggregation platforms (Datadog, Elasticsearch, CloudWatch).
 *   **Context Loss in Asynchronous Code**: When hundreds of requests execute concurrently, interleaved unstructured logs make it impossible to reconstruct the chronological sequence of a single user request.
 *   **Security Breaches via Log Leaks**: Unfiltered logging of request payloads or auth headers routinely exposes raw passwords, JWTs, and session cookies in cleartext to log indices, violating GDPR, HIPAA, and PCI-DSS.
-*   **Orchestration Blind Spots**: Missing or misconfigured readiness probes cause Kubernetes to route production traffic to booting pods before database connection pools are established, causing burst error spikes during deployments.
+*   **Cascading Reboot Storms**: If the liveness probe queries the database, a momentary database overload causes Kubernetes to fail liveness across all running pods simultaneously, triggering repeated cascading container restarts that turn a transient blip into a total platform outage.
 
 ---
 
 ## 4. When to Use It
 
-Engineers `MUST` enforce these observability standards across:
-*   All production HTTP APIs, RPC endpoints, and background worker jobs.
-*   Every inter-service communication boundary (propagating `traceparent` headers).
-*   All error handling pipelines and unhandled exception filters.
-*   Container deployment manifests and ingress gateways.
+### Normative Engineering Rules (RFC 2119)
+
+*   **Secrets & Personal Data Protection by Design (MUST)**:
+    *   **Golden Rule**: Systems **MUST NEVER** log credentials, passwords, JWT access/refresh tokens, API keys, private keys, or payment card data.
+    *   **Defense-in-Depth**: Automated regex/key scrubbers serve as a secondary defense layer; they **DO NOT** authorize developers to log raw request or response payloads indiscriminately.
+    *   **Allowlisted Structured Fields**: Log entries **SHOULD** record only explicit, allowlisted business metadata (e.g. `order_id`, `item_count`, `duration_ms`). Avoid dumping entire `req.body` or `req.headers` objects.
+    *   **Distinguish Secrets from PII**:
+        *   *Authentication Secrets* (passwords, tokens, keys) have zero tolerance for logging and must never enter the logging pipeline.
+        *   *Personal Data (PII)* (names, emails, phone numbers, IP addresses) must be minimized, pseudonymized, or masked before emission to comply with privacy regulations.
+*   **The Health Probe Triad Semantics (MUST)**:
+    *   **Liveness Probe (`/healthz`)**: **MUST NOT** check external dependencies (database, Redis, third-party APIs). It checks ONLY whether the local process runtime is alive, responsive, and not deadlocked. If it fails, the container is killed and restarted.
+    *   **Readiness Probe (`/readyz`)**: **MUST** verify local dependency health (e.g. can acquire a database connection, cache is populated). If it fails, the orchestrator temporarily diverts traffic away from this instance without restarting the process.
+    *   **Startup Probe (`/startupz`)**: Used when initialization (e.g. schema migration, model loading) takes longer than liveness probe intervals ($\ge 30\text{s}$). Disables liveness and readiness checks until startup completes successfully.
+*   **Distributed Tracing & Correlation (MUST)**:
+    *   Services **MUST** parse incoming W3C `traceparent` headers (`00-<trace_id>-<span_id>-<flags>`) and inject the identical `trace_id` into all structured log statements and downstream outbound requests.
+    *   If no trace header is present at ingress, the service **MUST** generate a cryptographically random 16-byte hex trace ID.
+*   **Structured JSON Output (MUST)**:
+    *   Production logs **MUST** be emitted as single-line JSON objects to `stdout` (or `stderr` for errors) containing standard root keys: `timestamp` (ISO 8601 UTC), `level` (`DEBUG`, `INFO`, `WARN`, `ERROR`), `service`, `message`, `trace_id`, and `context`.
 
 ---
 
