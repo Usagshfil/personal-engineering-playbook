@@ -35,12 +35,12 @@ flowchart TD
 
 | File | Topic | Core Focus |
 | :--- | :--- | :--- |
-| [01-credential-and-secret-management.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/01-credential-and-secret-management.md) | Credential & Secret Management | Zero hardcoded keys, Android Keystore, `.gitignore` safety |
-| [02-authentication-and-authorization.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/02-authentication-and-authorization.md) | Authentication & Authorization | Token lifecycles, JWT safety, RBAC, least privilege |
-| [03-input-validation-and-sanitization.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/03-input-validation-and-sanitization.md) | Input Validation & Sanitization | Fail-closed validation, SQL injection defense, boundary checks |
-| [04-dependency-security-and-supply-chain.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/04-dependency-security-and-supply-chain.md) | Supply Chain & Dependencies | Lockfiles, CVE scanning, vetting third-party packages |
-| [05-data-privacy-and-gdpr-principles.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/05-data-privacy-and-gdpr-principles.md) | Data Privacy & GDPR | Data minimization, user consent, right to erasure, encryption |
-| [06-secure-logging-and-telemetry.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/06-secure-logging-and-telemetry.md) | Secure Logging & Telemetry | PII masking, token scrubbing, sanitized crash reporting |
-| [07-threat-modeling-stride.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/07-threat-modeling-stride.md) | Threat Modeling (STRIDE) | 5-minute pragmatic STRIDE threat modeling for new features |
-| [08-secure-configuration.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/08-secure-configuration.md) | Secure App Configuration | Disabling debug flags, Network Security Config, HTTPS |
-| [09-api-and-database-security.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/10-security-and-privacy/09-api-and-database-security.md) | API & Database Security | Parameterized queries, rate limiting, SQLCipher encryption |
+| [01-credential-and-secret-management.md](01-credential-and-secret-management.md) | Credential & Secret Management | Zero hardcoded keys, hardware keystores, `.gitignore` safety |
+| [02-authentication-and-authorization.md](02-authentication-and-authorization.md) | Authentication & Authorization | Token lifecycles, JWT safety, RBAC, least privilege |
+| [03-input-validation-and-sanitization.md](03-input-validation-and-sanitization.md) | Input Validation & Sanitization | Fail-closed validation, SQL injection defense, boundary checks |
+| [04-dependency-security-and-supply-chain.md](04-dependency-security-and-supply-chain.md) | Supply Chain & Dependencies | Lockfiles, CVE scanning, vetting third-party packages |
+| [05-data-privacy-and-gdpr-principles.md](05-data-privacy-and-gdpr-principles.md) | Data Privacy & GDPR | Data minimization, user consent, right to erasure, encryption |
+| [06-secure-logging-and-telemetry.md](06-secure-logging-and-telemetry.md) | Secure Logging & Telemetry | PII masking, token scrubbing, sanitized crash reporting |
+| [07-threat-modeling-stride.md](07-threat-modeling-stride.md) | Threat Modeling (STRIDE) | 5-minute pragmatic STRIDE threat modeling for new features |
+| [08-secure-configuration.md](08-secure-configuration.md) | Secure App Configuration | Disabling debug flags, Network Security Config, HTTPS |
+| [09-api-and-database-security.md](09-api-and-database-security.md) | API & Database Security | Parameterized queries, rate limiting, database encryption |

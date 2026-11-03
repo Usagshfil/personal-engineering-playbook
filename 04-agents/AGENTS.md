@@ -1,7 +1,7 @@
 # AGENTS.md — Universal AI Coding Agent Governance (Section 04 Reference)
 
 > **Level 1 Universal Engineering Standard**  
-> **Canonical Root Copy**: [Root AGENTS.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/AGENTS.md)
+> **Canonical Root Copy**: [Root AGENTS.md](../AGENTS.md)
 
 ---
 

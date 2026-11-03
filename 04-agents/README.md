@@ -14,6 +14,7 @@ This section establishes the **AI Agent Governance System**:
 2. **The 4-Level Instruction Hierarchy**: The precedence framework that prevents contradictory behavior across tools.
 3. **Specialized Agent Roles (`roles/`)**: Role-specific directives for Planning, Architecture, Coding, Debugging, Testing, Code Review, and Documentation.
 4. **Tool Adapters (`adapters/`)**: Practical configuration templates and honest capability/limitation documentation for Google Antigravity, Cursor, Claude Code, and GitHub Copilot.
+5. **Tool Interoperability Matrix (`adapters/INTEROPERABILITY_MATRIX.md`)**: Empirical breakdown of what each tool natively supports vs. what requires manual developer execution.
 
 ---
 
@@ -42,16 +43,17 @@ $$\text{Project-Specific Rules (Level 3)} \succ \text{Technology-Specific Rules 
 ## Directory Catalog
 
 ### Specialized Roles (`roles/`)
-*   [planning-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/planning-agent.md): Deconstructs requirements, produces WBS, scopes milestones, creates implementation plans.
-*   [architecture-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/architecture-agent.md): Selects patterns from the Complexity Fit Matrix, guards against overengineering, drafts SADs/TDRs.
-*   [coding-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/coding-agent.md): Writes clean, idiomatic, immutable code in small vertical slices.
-*   [debugging-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/debugging-agent.md): Root-cause analysis, reproduction, hypothesis testing, regression verification.
-*   [testing-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/testing-agent.md): Implements Risk-Based Testing (RBT), unit tests domain logic, mocks system boundaries.
-*   [review-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/review-agent.md): Evaluates code quality, security risks, performance bottlenecks, and consistency.
-*   [documentation-agent.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/roles/documentation-agent.md): Maintains SRS, SAD, API docs, changelogs, and `PROJECT_PROGRESS.md`.
+*   [planning-agent.md](roles/planning-agent.md): Deconstructs requirements, produces WBS, scopes milestones, creates implementation plans.
+*   [architecture-agent.md](roles/architecture-agent.md): Selects patterns from the Complexity Fit Matrix, guards against overengineering, drafts SADs/TDRs.
+*   [coding-agent.md](roles/coding-agent.md): Writes clean, idiomatic, immutable code in small vertical slices.
+*   [debugging-agent.md](roles/debugging-agent.md): Root-cause analysis, reproduction, hypothesis testing, regression verification.
+*   [testing-agent.md](roles/testing-agent.md): Implements Risk-Based Testing (RBT), unit tests domain logic, mocks system boundaries.
+*   [review-agent.md](roles/review-agent.md): Evaluates code quality, security risks, performance bottlenecks, and consistency.
+*   [documentation-agent.md](roles/documentation-agent.md): Maintains SRS, SAD, API docs, changelogs, and `PROJECT_PROGRESS.md`.
 
-### Tool Adapters (`adapters/`)
-*   [antigravity/README.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/adapters/antigravity/README.md): Priority 1 — Google Antigravity integration and workspace rules.
-*   [cursor/README.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/adapters/cursor/README.md): Priority 2 — Cursor `.cursorrules` and `.cursor/rules/*.mdc` rules.
-*   [claude-code/README.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/adapters/claude-code/README.md): Priority 3 — Claude Code `CLAUDE.md` repository configuration.
-*   [copilot/README.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/04-agents/adapters/copilot/README.md): Priority 4 — GitHub Copilot `.github/copilot-instructions.md` configuration.
+### Tool Adapters & Interoperability (`adapters/`)
+*   [INTEROPERABILITY_MATRIX.md](adapters/INTEROPERABILITY_MATRIX.md): Empirical cross-tool capability and limitations matrix.
+*   [antigravity/README.md](adapters/antigravity/README.md): Priority 1 — Google Antigravity integration and workspace rules.
+*   [cursor/README.md](adapters/cursor/README.md): Priority 2 — Cursor `.cursorrules` and `.cursor/rules/*.mdc` rules.
+*   [claude-code/README.md](adapters/claude-code/README.md): Priority 3 — Claude Code `CLAUDE.md` repository configuration.
+*   [copilot/README.md](adapters/copilot/README.md): Priority 4 — GitHub Copilot `.github/copilot-instructions.md` configuration.

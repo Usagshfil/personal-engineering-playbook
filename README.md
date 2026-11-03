@@ -113,7 +113,7 @@ To ensure this playbook helps you continuously grow as an engineer, every major 
 
 ## 📜 Version & Governance
 
-* **Current Version**: `1.0.0-alpha`
+* **Current Version**: `1.0.0-alpha.1`
 * **Governed by**: Semantic Versioning (SemVer 2.0.0)
-* **Changelog**: See [CHANGELOG.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/CHANGELOG.md)
-* **Contributions**: See [CONTRIBUTING.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/CONTRIBUTING.md)
+* **Changelog**: See [CHANGELOG.md](CHANGELOG.md)
+* **Contributions**: See [CONTRIBUTING.md](CONTRIBUTING.md)

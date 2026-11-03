@@ -39,18 +39,18 @@ flowchart TD
 
 | Phase | Stage | Primary Objective | Key Deliverable |
 | :---: | :--- | :--- | :--- |
-| **01** | [01-project-discovery.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/01-project-discovery.md) | Clarify vision, target audience & value proposition | Project Proposal / Pitch |
-| **02** | [02-problem-analysis.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/02-problem-analysis.md) | Deconstruct core problem & user pain points | Problem Statement & Impact Brief |
-| **03** | [03-requirement-gathering.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/03-requirement-gathering.md) | Define Functional (FR) & Non-Functional (NFR) specs | SRS Document & User Stories |
-| **04** | [04-feasibility-analysis.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/04-feasibility-analysis.md) | Evaluate technical, financial & timeline viability | Feasibility & Risk Report |
-| **05** | [05-project-planning.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/05-project-planning.md) | Milestone scheduling, task breakdown & work packages | Roadmap & Milestone Plan |
-| **06** | [06-system-architecture.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/06-system-architecture.md) | High-level system structure, patterns & module design | Software Architecture Doc (SAD) |
-| **07** | [07-database-design.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/07-database-design.md) | Entity relationships, normalization & schema migration | Database Design Doc & ERD |
-| **08** | [08-ui-ux-design.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/08-ui-ux-design.md) | User flows, wireframes, component design system | UI/UX Specification & Wireframes |
-| **09** | [09-implementation.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/09-implementation.md) | Disciplined coding, unit tests & incremental commits | Working Source Code & PRs |
-| **10** | [10-testing.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/10-testing.md) | Risk-based testing, integration tests & bug fixes | Test Execution Report & Bug Fixes |
-| **11** | [11-deployment.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/11-deployment.md) | Production build preparation, signing & release | Signed APK/AAB & Release Notes |
-| **12** | [12-maintenance.md](file:///c:/Users/datnt249/AndroidStudioProjects/personal-engineering-playbook/02-lifecycle/12-maintenance.md) | Monitoring, bug triage, tech debt & updates | Maintenance Log & Minor Releases |
+| **01** | [01-project-discovery.md](01-project-discovery.md) | Clarify vision, target audience & value proposition | Project Proposal / Pitch |
+| **02** | [02-problem-analysis.md](02-problem-analysis.md) | Deconstruct core problem & user pain points | Problem Statement & Impact Brief |
+| **03** | [03-requirement-gathering.md](03-requirement-gathering.md) | Define Functional (FR) & Non-Functional (NFR) specs | SRS Document & User Stories |
+| **04** | [04-feasibility-analysis.md](04-feasibility-analysis.md) | Evaluate technical, financial & timeline viability | Feasibility & Risk Report |
+| **05** | [05-project-planning.md](05-project-planning.md) | Milestone scheduling, task breakdown & work packages | Roadmap & Milestone Plan |
+| **06** | [06-system-architecture.md](06-system-architecture.md) | High-level system structure, patterns & module design | Software Architecture Doc (SAD) |
+| **07** | [07-database-design.md](07-database-design.md) | Entity relationships, normalization & schema migration | Database Design Doc & ERD |
+| **08** | [08-ui-ux-design.md](08-ui-ux-design.md) | User flows, wireframes, component design system | UI/UX Specification & Wireframes |
+| **09** | [09-implementation.md](09-implementation.md) | Disciplined coding, unit tests & incremental commits | Working Source Code & PRs |
+| **10** | [10-testing.md](10-testing.md) | Risk-based testing, integration tests & bug fixes | Test Execution Report & Bug Fixes |
+| **11** | [11-deployment.md](11-deployment.md) | Production build preparation, signing & release | Signed Release Binary & Release Notes |
+| **12** | [12-maintenance.md](12-maintenance.md) | Monitoring, bug triage, tech debt & updates | Maintenance Log & Minor Releases |
 
 ---
 
