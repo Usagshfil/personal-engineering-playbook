@@ -94,12 +94,17 @@ CREATE TABLE IF NOT EXISTS orders (
     account_id UUID NOT NULL,
     organization_id UUID NOT NULL,
     status order_status NOT NULL DEFAULT 'PENDING',
+    -- Monetary representation: stored as exact integer minor units (BIGINT).
+    -- Currency scale is determined by currency column (e.g. 2 for USD, 0 for JPY, 3 for KWD).
+    -- For fractional rates, interest, or exchange rates, use NUMERIC(p,s) with Banker's Rounding.
     total_amount_cents BIGINT NOT NULL,
     currency CHAR(3) NOT NULL DEFAULT 'USD',
     idempotency_key TEXT NOT NULL,
     idempotency_payload_hash CHAR(64) NOT NULL, -- SHA-256 fingerprint
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     version INT NOT NULL DEFAULT 1, -- OCC version column
+    -- Temporal representation: TIMESTAMPTZ records absolute UTC instants for system events and audit trails.
+    -- (Real-world calendar appointments would store wall-clock TIMESTAMP WITHOUT TIME ZONE + IANA timezone name).
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

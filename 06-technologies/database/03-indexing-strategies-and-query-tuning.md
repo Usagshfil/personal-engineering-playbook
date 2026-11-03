@@ -11,11 +11,13 @@
 
 Core indexing fundamentals include:
 *   **The B-Tree Left-to-Right Prefix Rule**: Composite indexes on `(A, B, C)` can satisfy queries on `WHERE A = 1`, `WHERE A = 1 AND B = 2`, and `WHERE A = 1 AND B = 2 AND C = 3`. However, they *cannot* accelerate queries filtering solely on `WHERE B = 2` or `WHERE C = 3`.
-*   **The Selectivity Hierarchy**: In composite indexes, columns with **Equality filters** `MUST` be placed first, followed by columns with **Range/Inequality filters** (`<`, `>`, `BETWEEN`, `LIKE 'prefix%'`), followed by **Sort columns** (`ORDER BY`).
-*   **Execution Plan Verification (`EXPLAIN ANALYZE`)**: Query optimization decisions `MUST` be guided by empirical execution plans rather than guesswork, inspecting `Buffers: shared hit/read`, join algorithms (Hash Join vs. Nested Loop vs. Merge Join), and scan types.
-*   **Write Amplification Cost**: Every index speeds up specific read queries but adds a write penalty to every `INSERT`, `UPDATE`, and `DELETE`.
+*   **The Selectivity & Ordering Heuristic (F19)**: The sequence `Equality` $\to$ `Range/Inequality` $\to$ `Sort Ordering` $\to$ `Covering (INCLUDE)` is an effective heuristic, but `NOT` an immutable recipe. The optimal index structure depends on predicate selectivity, sort order, query frequency, index size, write volume, and PostgreSQL planner cost estimates. For example, if a range predicate is extraordinarily selective (matching 2 rows out of 10 million), placing it earlier in the index can outperform an equality predicate with low selectivity.
+*   **Trade-Offs of Covering Indexes (`INCLUDE`)**: Appending non-key payload columns via `INCLUDE` allows fast Index-Only Scans by avoiding table heap lookups. However, engineers `MUST` evaluate two critical penalties:
+    *   **Index Bloat & Buffer Eviction**: Each included column widens the index leaf pages, reducing the number of index tuples per 8KB page and increasing pressure on PostgreSQL `shared_buffers`.
+    *   **Write Amplification & HOT Update Elimination**: Updating an included column forces a physical index update across all index leaves. Critically, modifying an indexed column disables PostgreSQL **HOT (Heap-Only Tuple)** optimization, turning an in-page heap update into a heavy table and index write cycle that generates table bloat. Never include high-churn columns (such as `view_count` or `last_accessed_at`) in an `INCLUDE` clause.
+*   **Execution Plan Verification (`EXPLAIN (ANALYZE, BUFFERS)`)**: Index design decisions `MUST` be verified through empirical query plans on production-scale data volumes, evaluating `Buffers: shared hit/read`, heap fetch counts, scan types (Index Scan vs. Index-Only Scan vs. Bitmap Index Scan), and execution timing.
 
-$$\text{Composite Index Order} = \underbrace{\text{Equality Columns}}_{\text{Col1 = 'VAL'}} \longrightarrow \underbrace{\text{Range / Inequality}}_{\text{Col2 > 100}} \longrightarrow \underbrace{\text{Sort Ordering}}_{\text{ORDER BY Col3}} \longrightarrow \underbrace{\text{Covering Attributes}}_{\text{INCLUDE (Col4, Col5)}}$$
+$$\text{Composite Index Heuristic} = \underbrace{\text{High-Selectivity Predicates}}_{\text{Col1 = 'VAL'}} \longrightarrow \underbrace{\text{Range / Inequality}}_{\text{Col2 > 100}} \longrightarrow \underbrace{\text{Sort Ordering}}_{\text{ORDER BY Col3}} \longrightarrow \underbrace{\text{Low-Churn Covering}}_{\text{INCLUDE (Col4)}}$$
 
 ---
 
@@ -178,4 +180,4 @@ export async function getAccountOrdersWithItemsOptimized(accountId: string) {
 - [ ] **Partial Indexes on Flag Columns**: Low-cardinality status or soft-delete columns (e.g. `is_active`, `deleted_at`) use partial indexes rather than full-table indexes.
 - [ ] **Zero N+1 Query Loops**: Parent-child relationships are retrieved via single joins or batched `ANY(...)` lookups; zero individual database queries are fired inside loops.
 - [ ] **No Function Wrapping**: Search predicates avoid wrapping indexed columns in functions unless explicit expression indexes are configured.
-- [ ] **Covering Index Optimization**: High-frequency read queries utilize `INCLUDE` columns where appropriate to enable fast Index-Only Scans.
+- [ ] **Covering Index Optimization & HOT Trade-Off**: High-frequency read queries utilize `INCLUDE` columns only for low-churn data where Index-Only Scans justify the additional leaf page bloat and loss of Heap-Only Tuple (HOT) update optimization.

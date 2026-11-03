@@ -10,15 +10,22 @@
 **Safe Schema Migrations** is the disciplined engineering practice of evolving database schemas, tables, columns, indexes, and data formats without causing query lockouts, application downtime, or transaction rollbacks during continuous deployment.
 
 Core migration principles include:
+*   **Migration Safety as Verified Conditions (F20)**: "Zero-downtime migration" is not an unconditional guarantee; it is an engineering discipline requiring verified compatibility across releases ($N$ and $N+1$), rigorous lock budgeting, and pre-tested recovery conditions.
 *   **The Expand-and-Contract (Parallel Run) Pattern**: Schema mutations `MUST` be broken down into phased, non-breaking steps so that both the currently running application version ($N$) and the newly deploying application version ($N+1$) can run concurrently against the database without error.
-*   **Lock Timeout Discipline**: Every DDL migration script `MUST` set a strict, short `lock_timeout` (e.g. `SET lock_timeout = '2s';`). This prevents DDL operations from waiting indefinitely behind long-running queries while blocking all subsequent incoming read/write traffic.
-*   **Non-Blocking DDL Execution**: Production index additions `MUST` use `CREATE INDEX CONCURRENTLY`. Foreign key and check constraints `MUST` be added with `NOT VALID` and validated in a separate non-blocking pass.
-*   **Chunked Batch Backfills**: Data migrations across tables exceeding $100,000$ rows `MUST` be executed in small, cursor-paginated chunks with pauses to prevent lock contention, transaction log (WAL) exhaustion, and replication lag.
+*   **Defensive Lock Timeout Discipline**: Every DDL migration script `MUST` set a strict, short `lock_timeout` (e.g. `SET lock_timeout = '2s';`). This prevents DDL operations from waiting in the lock queue behind long-running queries while blocking all subsequent incoming read/write traffic.
+*   **Non-Blocking DDL Operational Caveats**:
+    *   **Standalone Index Creation**: `CREATE INDEX CONCURRENTLY` `MUST NOT` be run inside a multi-statement transaction block (`BEGIN ... COMMIT`). If aborted midway, PostgreSQL leaves behind an `INVALID` index that consumes disk and write I/O; migration runners must check for and drop invalid indexes before retrying.
+    *   **Two-Phase Constraints**: Foreign keys and check constraints `MUST` be added with `NOT VALID` (which requires only a brief metadata catalog lock) and then validated in a subsequent non-blocking pass (`VALIDATE CONSTRAINT`) that scans the table under a weak `SHARE UPDATE EXCLUSIVE` lock.
+*   **Throttled & Resumable Batch Backfills**: Data migrations across tables exceeding $100,000$ rows `MUST` be executed in small, cursor-paginated chunks with pauses to prevent lock contention, transaction log (WAL) exhaustion, and replication lag. Backfills `MUST` be idempotent and resumable from checkpoint offsets.
+*   **Disentangling Rollback Semantics**:
+    *   **Schema Rollback**: Reverting DDL (e.g. dropping a newly added column).
+    *   **Application Rollback**: Re-deploying version $N$ containers if version $N+1$ fails health checks.
+    *   **Data Recovery**: Restoring discarded or transformed data. Once the *Contract Phase* drops an old column, a simple SQL rollback *cannot* recover data written exclusively to the new column during the deployment window. Destructive contract phases must be delayed until version $N+1$ is fully baked and verified.
 
 $$\begin{array}{rcccl}
 \text{Phase 1 (Expand)} & : & \text{Add new column/table nullable or with default} & \longrightarrow & \text{Both App } N \text{ and } N+1 \text{ compatible} \\
-\text{Phase 2 (Dual-Write)} & : & \text{App } N+1 \text{ writes both old and new formats} & \longrightarrow & \text{Backfill historical data in chunks} \\
-\text{Phase 3 (Contract)} & : & \text{App reads new format exclusively} & \longrightarrow & \text{Drop old column/indexes safely}
+\text{Phase 2 (Dual-Write)} & : & \text{App } N+1 \text{ writes both old and new formats} & \longrightarrow & \text{Resumable backfill in throttled chunks} \\
+\text{Phase 3 (Contract)} & : & \text{App reads new format exclusively} & \longrightarrow & \text{Drop old column only after bake period}
 \end{array}$$
 
 ---

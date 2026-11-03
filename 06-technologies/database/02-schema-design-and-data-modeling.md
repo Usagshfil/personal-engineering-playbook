@@ -12,10 +12,17 @@
 Core modeling invariants include:
 *   **Third Normal Form (3NF) Baseline**: Every non-key attribute must depend on the key, the whole key, and nothing but the key.
 *   **Declarative Constraint Enforcement**: Business invariants (e.g. non-negative balances, valid email formats, immutable states) `MUST` be enforced directly inside the database via `CHECK`, `NOT NULL`, `UNIQUE`, and `FOREIGN KEY` constraints, providing a durable defense-in-depth barrier behind application-level validation.
-*   **Strict Temporal & Monetary Typing**: Timestamps `MUST` use timezone-aware types (`TIMESTAMPTZ` stored in UTC). Financial amounts `MUST` use arbitrary-precision decimals (`NUMERIC`/`DECIMAL` or integer cents); using floating-point types (`FLOAT`/`REAL`/`DOUBLE`) for currency is strictly prohibited.
+*   **Monetary & Financial Representation (F17)**: Using floating-point types (`FLOAT`/`REAL`/`DOUBLE`) for currency is strictly prohibited. Financial representation `MUST` follow one of two verified patterns:
+    *   **Integer Minor Units Pattern**: Store amounts as an integer (`BIGINT`) in the currency's minor units (e.g. cents for USD/EUR), accompanied by an ISO 4217 currency code and explicit scale factor. Note that "cents" is not universal: JPY has 0 minor units ($1\text{ JPY} = 1\text{ unit}$), BHD/KWD use 3 decimal places ($1\text{ KWD} = 1000\text{ fils}$), and cryptocurrencies require 8–18 units.
+    *   **Arbitrary-Precision Decimals (`NUMERIC(p,s)`)**: When dealing with fractional shares, foreign exchange rates, tax percentages, or sub-cent precision, use `NUMERIC(p, s)`.
+    *   **Rounding Rules**: Rounding is a business rule, not a database type choice. Systems `MUST` standardize on Banker's Rounding (Half-Even: `ROUND_HALF_EVEN`) to eliminate statistical bias, and enforce it consistently across application services and database queries.
+*   **Timestamp & Timezone Semantics (F18)**: PostgreSQL `TIMESTAMPTZ` stores an absolute point in time (an instant) internally normalized to UTC; it does *not* preserve the client's original timezone name or offset. Systems `MUST` distinguish between:
+    *   **Events and Audit Timestamps**: System events, created/updated timestamps, audit ledgers, and transaction commits `MUST` use `TIMESTAMPTZ`.
+    *   **Calendar Concepts & Scheduled Appointments**: Future real-world local events (e.g., flight departure at 09:00 local time, recurring doctor appointment) `MUST` be stored as a local wall-clock timestamp (`TIMESTAMP WITHOUT TIME ZONE` or `DATE` + `TIME`) alongside an explicit **IANA Timezone Identifier** (e.g., `America/New_York`, `Asia/Ho_Chi_Minh`, `Europe/London`). This ensures the scheduled appointment remains intact even if governments alter Daylight Saving Time (DST) transition dates.
+    *   **Presentation & Display**: Timezone formatting is a presentation concern; convert UTC instants to the user's localized timezone at the presentation/edge layer.
 *   **Nullable Hygiene**: Columns `MUST` be `NOT NULL` by default. Optionality requires explicit domain justification, preventing confusing 3-valued boolean logic (`TRUE`, `FALSE`, `UNKNOWN/NULL`).
 
-$$\text{Domain Invariant} \xrightarrow[\text{Application Validation}]{\text{Boundary DTO}} \underbrace{\text{Database Engine}}_{\text{ACID Boundary}} \longrightarrow \left[ \begin{array}{l} \text{NOT NULL Constraints} \\ \text{CHECK (amount > 0)} \\ \text{FOREIGN KEY ON DELETE RESTRICT} \\ \text{TIMESTAMPTZ (UTC)} \end{array} \right]$$
+$$\text{Domain Invariant} \xrightarrow[\text{Application Validation}]{\text{Boundary DTO}} \underbrace{\text{Database Engine}}_{\text{ACID Boundary}} \longrightarrow \left[ \begin{array}{l} \text{NOT NULL Constraints} \\ \text{CHECK (total_amount_cents >= 0)} \\ \text{FOREIGN KEY ON DELETE RESTRICT} \\ \text{TIMESTAMPTZ (Instant in UTC)} \\ \text{IANA Timezone for Calendar Events} \end{array} \right]$$
 
 ---
 
@@ -152,9 +159,9 @@ CREATE TABLE order_items (
 ## 8. Common Mistakes & Pitfalls
 
 ### Trap 1: Using `FLOAT` or `DOUBLE PRECISION` for Monetary Data
-*   **The Trap**: Declaring price, tax, or balance columns as `FLOAT`, `REAL`, or `DOUBLE PRECISION`.
-*   **The Consequence**: Binary floating-point representation cannot exactly represent base-10 fractions (such as $0.10$ or $0.05$). Cumulative arithmetic across thousands of transactions results in balance discrepancies and accounting failure.
-*   **Mitigation**: Engineers `MUST` store monetary values as **exact integer smallest currency units** (e.g. `total_cents BIGINT`) or **arbitrary-precision decimals** (`NUMERIC(14, 2)`).
+*   **The Trap**: Declaring price, tax, or balance columns as `FLOAT`, `REAL`, or `DOUBLE PRECISION`, or assuming all currencies have 2 decimal minor units ("cents").
+*   **The Consequence**: Binary floating-point representation cannot exactly represent base-10 fractions (such as $0.10$ or $0.05$). Cumulative arithmetic across thousands of transactions results in balance discrepancies and accounting failure. Furthermore, hardcoding a divide-by-100 logic corrupts currencies like JPY (zero minor units) or KWD (three decimal places).
+*   **Mitigation**: Engineers `MUST` store monetary values as **exact integer minor units** (`BIGINT`) with currency code and scale, or **arbitrary-precision decimals** (`NUMERIC(p, s)`). Enforce Banker's Rounding (Half-Even) across the business domain.
 
 ### Trap 2: Relying Solely on Application-Level Validation Without Database Constraints
 *   **The Trap**: Validating that an email is unique or a balance is non-negative exclusively inside TypeScript/Java code, leaving the database table with no `UNIQUE` or `CHECK` constraints.
@@ -171,8 +178,8 @@ CREATE TABLE order_items (
 ## 9. Verification Checklist
 
 - [ ] **Strict Normalization**: The schema satisfies 3NF; non-key attributes depend strictly on the primary key without transitive redundancies.
-- [ ] **Exact Monetary Types**: All currency, pricing, and financial balance columns use `NUMERIC` or `BIGINT` (cents). Zero floating-point types (`FLOAT`, `REAL`, `DOUBLE`) exist.
-- [ ] **Timezone-Aware Timestamps**: All temporal columns are declared as `TIMESTAMPTZ` and stored in UTC.
+- [ ] **Exact Monetary Types**: All currency and financial balance columns use `NUMERIC(p,s)` or `BIGINT` minor units with ISO currency codes and explicit scale. Zero floating-point types (`FLOAT`, `REAL`, `DOUBLE`) exist. Banker's Rounding (Half-Even) is enforced.
+- [ ] **Semantic Timestamps**: System events and audit timestamps are declared as `TIMESTAMPTZ` (UTC instants); local calendar concepts and appointments store wall-clock time plus explicit IANA timezone strings.
 - [ ] **Defensive Constraints**: Tables define declarative `NOT NULL`, `CHECK`, and `UNIQUE` constraints enforcing core domain invariants.
 - [ ] **Explicit Foreign Keys**: All relational foreign keys specify an explicit `ON DELETE` rule (`RESTRICT`, `CASCADE`, or `SET NULL`).
 - [ ] **Nullable Discipline**: Columns are `NOT NULL` by default. Boolean columns are never nullable without documented enum justifications.

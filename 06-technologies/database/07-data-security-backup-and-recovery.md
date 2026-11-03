@@ -19,9 +19,14 @@ Core persistence security and recovery pillars include:
     *   *At Rest*: Transparent Data Encryption (TDE) or block-level filesystem encryption (LUKS / AWS EBS KMS).
     *   *Column-Level*: Client-side or `pgcrypto` envelope encryption for high-risk PII (e.g. Social Security numbers, tax IDs).
 *   **Multi-Tenant Isolation via Row-Level Security (RLS)**: Enforcing tenant boundaries at the database engine level so that tenant leaks are impossible even if application queries omit `WHERE tenant_id = ?`.
-*   **The Disaster Recovery Doctrine ("An Untested Backup is Not a Backup")**: Backups `MUST` be continuously validated through automated restoration drills measuring compliance against explicit **Recovery Point Objectives (RPO)** and **Recovery Time Objectives (RTO)** using Write-Ahead Log (WAL) archiving for Point-in-Time Recovery (PITR).
+*   **The Disaster Recovery Doctrine ("A Successful Backup is Not a Successful Recovery") (F22)**: Storing a backup archive is merely a hypothesis; recoverability is proven only through measured, automated restoration drills. Production standards mandate:
+    *   **Recovery Point Objective (RPO $\le 5\text{m}$)**: Achieved through continuous Write-Ahead Log (WAL) archiving via tools like `pgBackRest` or `WAL-G`. Archive health `MUST` be monitored in real time (`pg_stat_archiver`) with alerts on archival lag $> 5\text{ minutes}$.
+    *   **Recovery Time Objective (RTO $\le 30\text{m}$)**: Measured time to provision an isolated database instance, replay WAL logs to the target timestamp, and pass application health gates.
+    *   **Cryptographic Integrity Verification**: Backups `MUST` include cryptographic checksums (SHA-256) across all archived segments to detect silent bit rot in object storage.
+    *   **Isolated Restoration Environment**: Restoration tests `MUST` execute in an isolated network sandbox to prevent accidental connection to production traffic or downstream webhooks.
+    *   **Application-Level Consistency Validation**: Post-restoration verification `MUST NOT` rely on simple process boot checks; it `MUST` execute deep relational consistency queries (e.g. validating foreign key integrity, row counts across core tables, and checksumming immutable historical audit ledgers).
 
-$$\text{PostgreSQL Storage} \xrightarrow[\text{Continuous Archiving}]{\text{pgBackRest / WAL-G}} \underbrace{\text{Encrypted S3 / Cloud Bucket}}_{\text{Immutable WORM Vault}} \xrightarrow[\text{Automated Weekly Drill}]{\text{Ephemeral Test Container}} \underbrace{\text{Verification Pass}}_{\text{RPO < 5m, RTO < 30m}}$$
+$$\text{PostgreSQL Primary} \xrightarrow[\text{Archival Lag < 5m}]{\text{Continuous WAL Sync}} \underbrace{\text{Encrypted S3 WORM Vault}}_{\text{SHA-256 Verified Segments}} \xrightarrow[\text{Automated Weekly Pipeline}]{\text{Isolated Sandbox Container}} \underbrace{\text{Application Consistency Gate}}_{\text{RPO < 5m, RTO < 30m, Invariant Passed}}$$
 
 ---
 
@@ -204,6 +209,6 @@ fi
 - [ ] **Role Separation Enforced**: The application runtime connects with a restricted DML-only role (`app_user`). Zero `SUPERUSER` or `CREATE` permissions exist in application connection pools.
 - [ ] **TLS Enforcement**: Database connections mandate TLS with strict certificate verification (`sslmode=verify-full`).
 - [ ] **Continuous WAL Archiving (PITR)**: Write-Ahead Logs are archived continuously to an encrypted off-site cloud vault, enabling recovery to any exact minute ($\text{RPO} \le 5\text{ minutes}$).
-- [ ] **Automated Restoration Testing**: An automated job runs weekly to restore backups into an isolated test environment and verify table integrity ($\text{RTO} \le 30\text{ minutes}$).
+- [ ] **Automated Restoration Testing & Consistency Checks**: An automated drill runs weekly to restore backups into an isolated test sandbox, validating cryptographic segment checksums and executing deep application invariant queries ($\text{RTO} \le 30\text{ minutes}$).
 - [ ] **Encryption at Rest**: Storage volumes utilize AES-256 block encryption (EBS KMS / LUKS) with managed customer keys.
 - [ ] **Multi-Tenant Row-Level Security**: Multi-tenant tables enforce database-level Row-Level Security (RLS) policies guarding tenant isolation.

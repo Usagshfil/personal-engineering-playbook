@@ -30,6 +30,7 @@ All four core technology domains of **Milestone 4** are fully implemented and ve
 | **Web Frontend** | **Priority 2** | TypeScript, React 19, Vite/Next.js, Tailwind CSS, Modern Web APIs, Web Performance (CWV) | [Web Standards](web/README.md) (6 guides) | **Active (Completed)** |
 | **Backend & APIs** | **Priority 3** | RESTful API Design, RFC 9110, Node.js / Go / Spring Boot, OAuth2/OIDC, Resilience & Observability | [Backend Standards](backend/README.md) (6 guides) | **Active (Completed)** |
 | **Database & Persistence** | **Priority 4** | Relational SQL (PostgreSQL 16+, SQLite), 3NF Normalization, Indexing Strategies, Safe Migrations, Concurrency, Pooling, Backup/Recovery | [Database Standards](database/README.md) (7 guides) | **Active (Completed)** |
+| **Cross-Domain Integration** | **Milestone 4.3** | Ownership Matrix, Harmonization, Transactional Outbox, RFC 9457, Token Family Rotation, Unified Deadlines | [Cross-Domain Standards](CROSS_DOMAIN_CONSISTENCY.md) | **Active (Completed)** |
 
 ---
 
@@ -41,6 +42,7 @@ All four core technology domains of **Milestone 4** are fully implemented and ve
 > - **Web Projects**: Must strictly follow the normative guides in [`06-technologies/web/`](web/README.md).
 > - **Backend Projects**: Must strictly follow the normative guides in [`06-technologies/backend/`](backend/README.md).
 > - **Database & Persistence Projects**: Must strictly follow the normative guides in [`06-technologies/database/`](database/README.md).
+> - **Cross-Tier / Full-Stack Work**: When features span multiple tiers (e.g. mobile/web to backend to database), agents must strictly enforce the authoritative ownership contracts, transactional outbox pattern, and unified timeout budgets defined in [`06-technologies/CROSS_DOMAIN_CONSISTENCY.md`](CROSS_DOMAIN_CONSISTENCY.md).
 >
 > When executing engineering tasks within these domains, AI coding agents must observe this precedence hierarchy:
 > 1. **Tier 1 Universal Primacy**: Strictly observe all universal rules in `01-principles/`, `03-architecture/`, `10-security-and-privacy/`, and `AGENTS.md`.
