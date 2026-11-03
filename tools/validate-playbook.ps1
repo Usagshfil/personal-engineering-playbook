@@ -291,7 +291,7 @@ Write-Host "`n--- TEST SUITE 5: Technology Standards Pedagogical Schema Validati
 
 $TechDir = Join-Path $PlaybookRoot "06-technologies"
 $TechGuideFiles = Get-ChildItem -Path $TechDir -Recurse -File -Filter "0*.md"
-Write-Host "Found $($TechGuideFiles.Count) technology guides for pedagogical validation (Expected: 14).`n"
+Write-Host "Found $($TechGuideFiles.Count) technology guides for pedagogical validation (Expected: 20).`n"
 
 $RequiredPedagogicalSections = @(
     "1. Definition & Core Concept",
