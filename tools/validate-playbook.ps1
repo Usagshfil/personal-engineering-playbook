@@ -285,6 +285,62 @@ if (Test-Path $VersionFile) {
 }
 
 # -----------------------------------------------------------------
+# TEST SUITE 5: TECHNOLOGY GUIDES 9-PART PEDAGOGICAL SCHEMA
+# -----------------------------------------------------------------
+Write-Host "`n--- TEST SUITE 5: Technology Standards Pedagogical Schema Validation ---" -ForegroundColor Yellow
+
+$TechDir = Join-Path $PlaybookRoot "06-technologies"
+$TechGuideFiles = Get-ChildItem -Path $TechDir -Recurse -File -Filter "0*.md"
+Write-Host "Found $($TechGuideFiles.Count) technology guides for pedagogical validation (Expected: 14).`n"
+
+$RequiredPedagogicalSections = @(
+    "1. Definition & Core Concept",
+    "2. Purpose",
+    "3. Why It Matters",
+    "4. When to Use It",
+    "5. When NOT to Use It",
+    "6. Advantages & Disadvantages",
+    "7. Practical Examples",
+    "8. Common Mistakes & Pitfalls",
+    "9. Verification Checklist"
+)
+
+$TechValidationResults = @()
+
+foreach ($TechFile in $TechGuideFiles) {
+    $RelativePath = $TechFile.FullName.Substring($PlaybookRoot.Length).TrimStart('\', '/')
+    $Content = Get-Content -Path $TechFile.FullName -Raw
+    $Domain = $TechFile.Directory.Name
+    $FileName = $TechFile.Name
+    
+    $GuidePass = $true
+    $MissingSections = @()
+
+    foreach ($Section in $RequiredPedagogicalSections) {
+        # Match markdown H2 heading with number and title prefix
+        $EscapedPrefix = [regex]::Escape($Section)
+        if (-not ($Content -match "(?m)^##\s+$EscapedPrefix")) {
+            $GuidePass = $false
+            $MissingSections += $Section
+        }
+    }
+
+    if (-not $GuidePass) {
+        $ErrorCount++
+    }
+
+    $TechValidationResults += [PSCustomObject]@{
+        Domain   = $Domain
+        File     = $FileName
+        Status   = if ($GuidePass) { "PASS" } else { "FAIL" }
+        Issues   = if ($MissingSections.Count -gt 0) { "Missing: " + ($MissingSections -join ", ") } else { "None" }
+    }
+}
+
+$TechValidationResults | Format-Table -AutoSize
+
+
+# -----------------------------------------------------------------
 # SUMMARY
 # -----------------------------------------------------------------
 Write-Host "`n================================================================" -ForegroundColor Cyan

@@ -19,24 +19,33 @@ $$\text{Tier 3: Project Overlay} \succ \text{Tier 2: Android Standard} \succ \te
 
 ---
 
-## 2. Modern Android Technology Baseline
+## 2. Technology Version Governance Matrix
 
-Our engineering standard reflects the modern, production-hardened Android architecture recommendations:
+To prevent version drift and ensure reproducible builds, the Android standard defines explicit version baselines:
 
-| Component | Standard Selection | Rationale & Alternatives |
-| :--- | :--- | :--- |
-| **Language** | **Kotlin 2.0+** | Modern language idioms, null safety, K2 compiler speed, value classes. |
-| **UI Toolkit** | **Jetpack Compose** | Declarative, reactive UI; eliminates XML views, ViewBinding, and fragmentation. |
-| **Concurrency** | **Coroutines & Flow** | Structured concurrency, cooperative cancellation, non-blocking streams. |
-| **Persistence** | **Room 2.6+ & DataStore** | Compile-time SQL verification, reactive Flow queries, type-safe settings. |
-| **Dependency Injection** | **Dagger Hilt** | Standard Android DI with compile-time verification; Koin accepted for small scripts. |
-| **Networking** | **Retrofit 2.11+ / OkHttp** | Industry standard REST client with Kotlinx Serialization and interceptors. |
-| **Architecture** | **MVVM / MVI (Clean)** | Unidirectional Data Flow (UDF), immutable `UiState`, lifecycle-aware collection. |
-| **Build Configuration** | **Gradle Kotlin DSL & TOML** | Type-safe `build.gradle.kts` with centralized `gradle/libs.versions.toml`. |
+| Component / Dependency | Minimum Supported | Recommended Baseline | Example Version | Governance & Maintenance Policy |
+| :--- | :---: | :---: | :---: | :--- |
+| **Android OS / SDK** | `minSdk 24` (7.0) | `targetSdk 34` (14+) | `compileSdk 34` | Minimum covers >96% of global devices; target latest Google Play requirement. |
+| **Kotlin Language** | `1.9.20` | `2.0+` (K2) | `2.0.0` | K2 compiler speed, `@JvmInline` value classes, sealed interfaces. |
+| **Jetpack Compose** | `1.5.0` | **BOM 2024.06+** | `2024.06.00` | Manage versions via Compose Compiler Gradle plugin (Kotlin 2.0). |
+| **Concurrency & Streams** | `1.7.3` | `1.8+` | `1.8.0` | Structured concurrency; `viewModelScope` with injected dispatchers. |
+| **Persistence (Room)** | `2.5.0` | `2.6+` | `2.6.1` | KSP code generation; `MigrationTestHelper` and schema export mandatory. |
+| **Dependency Injection** | `2.48` | `Dagger Hilt 2.51+` | `2.51.1` | Compile-time graph verification; `@TestInstallIn` module overrides. |
+| **Networking & HTTP** | `2.9.0` | `Retrofit 2.11+` | `2.11.0` | OkHttp 4.12.0; Kotlinx Serialization 1.6+ with `@SerialName`. |
+| **Build Tools (Gradle/AGP)** | `8.0` | `Gradle 8.4+ / AGP 8.3+` | AGP 8.3.1 | Kotlin DSL (`build.gradle.kts`) and Version Catalogs (`libs.versions.toml`). |
+
+*Last Verified Matrix Date: 2026-11-03*
 
 ---
 
-## 3. Technology Standards Catalog
+## 3. Recommendation Strength Taxonomy (RFC 2119)
+
+*   **MUST**: Mandatory requirement for correctness, security, or crash prevention (e.g. zero `GlobalScope`, rethrowing `CancellationException`, zero hardcoded keystore secrets, R8 minification in release).
+*   **SHOULD**: Strong default recommendation for production Android applications (e.g. Dagger Hilt for DI, Room for relational persistence, Unidirectional Data Flow).
+*   **MAY**: Optional technique or lightweight alternative (e.g. Koin for lightweight scripts, DataStore Preferences for simple key-value flags).
+---
+
+## 4. Technology Standards Catalog
 
 The Android standard is structured into 8 comprehensive guides, each adhering to the **9-Part Pedagogical Schema**:
 
@@ -53,7 +62,7 @@ The Android standard is structured into 8 comprehensive guides, each adhering to
 
 ---
 
-## 4. Reading & Implementation Order
+## 5. Reading & Implementation Order
 
 When onboarding to an Android project or developing new features:
 1. **Core Language & Concurrency**: Review [`01-kotlin-idioms.md`](01-kotlin-idioms.md) and [`03-coroutines-and-flow.md`](03-coroutines-and-flow.md).

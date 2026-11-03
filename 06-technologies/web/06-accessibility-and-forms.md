@@ -30,11 +30,22 @@ This standard pairs **WCAG 2.1 Level AA compliance** with high-performance, type
 +-------------------------------------------------------------------------+
 ```
 
+### Accessibility Target & Standards Conformance
+*   **Normative Baseline**: **WCAG 2.1 Level AA** compliance across all public web interfaces.
+*   **WCAG 2.2 Additions Incorporated**:
+    *   *SC 2.5.8 (Target Size Minimum)*: Interactive controls **MUST** be at least $24 \times 24$ CSS pixels (recommended $44 \times 44\text{px}$ on mobile touch screens), unless nested inline in prose.
+    *   *SC 2.4.11 (Focus Not Obscured)*: Sticky headers, cookie banners, or floating footers **MUST NOT** completely obscure active keyboard focus.
+*   **The 4-Tier Accessibility Verification Protocol**:
+    1.  *Tier 1: Automated Static Analysis*: Run ESLint `jsx-a11y` and automated `axe-core` tests in CI (detects 30–40% of baseline errors).
+    2.  *Tier 2: Keyboard & Focus Traversal*: Manual end-to-end verification without mouse: `Tab`, `Shift+Tab`, `Enter`, `Space`, `Escape`, verifying focus trap in dialogs and focus restoration upon close.
+    3.  *Tier 3: Screen Reader Testing*: Manual inspection using native screen readers (VoiceOver on macOS/iOS, NVDA on Windows) to verify announced labels, live error updates, and landmark hierarchy.
+    4.  *Tier 4: Cognitive & Visual Checks*: Verify 200% browser text zoom without content clipping, 4.5:1 text contrast ratios (3:1 for large text), and `@media (prefers-reduced-motion)` compliance.
+
 ---
 
 ## 2. Purpose
 
-The purpose of this standard is to ensure web interfaces comply with international accessibility laws (WCAG 2.1 AA / ADA / Section 508), eliminate input lag in complex forms, provide type-safe runtime input validation, and make dialogs and menus accessible without custom hacky scripts.
+The purpose of this standard is to ensure web interfaces comply with international accessibility laws (WCAG 2.1 AA / ADA / Section 508 / EAA), eliminate input lag in complex forms, provide type-safe runtime input validation, and make dialogs and menus accessible without custom hacky scripts.
 
 ---
 
@@ -49,28 +60,32 @@ The purpose of this standard is to ensure web interfaces comply with internation
 
 ## 4. When to Use It
 
-*   **Semantic HTML First**: Always use native HTML elements before reaching for ARIA:
-    *   `<button>` for actions; `<a>` with `href` for navigation.
-    *   `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>` for structural landmarks.
-    *   `<dialog>` or accessible headless primitives (Radix UI / Headless UI) for modals.
-*   **Form Management**: Use **React Hook Form** with `zodResolver(schema)` for all forms with two or more inputs.
-*   **Accessible Form Errors**:
-    *   Set `aria-invalid="true"` on invalid inputs.
-    *   Link error text to input via `aria-describedby="error-id"`.
-    *   Use `aria-live="polite"` or `role="alert"` so screen readers announce validation failures.
-*   **Focus Management**:
-    *   When opening a modal or drawer, trap keyboard focus within the dialog.
+### Normative Engineering Rules (RFC 2119)
+
+*   **Semantic Elements First (MUST)**: Always use native HTML elements before reaching for ARIA:
+    *   `<button>` for interactive actions; `<a>` with a valid `href` for page navigation.
+    *   `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>` for landmark navigation.
+    *   `<dialog>` or accessible headless primitives (Radix UI / Headless UI) for modals and drawers.
+*   **Explicit Label Pairing (MUST)**: Every form input **MUST** have an explicitly linked `<label htmlFor="...">` with an identical `id` on the input element.
+*   **Accessible Form Errors (MUST)**:
+    *   Invalid inputs **MUST** set `aria-invalid="true"`.
+    *   Error messages **MUST** be programmatically linked via `aria-describedby="error-id"`.
+    *   Error message text **MUST** be placed in an assertive or polite live region (`role="alert"` or `aria-live="polite"`).
+*   **Modal Focus Management (MUST)**:
+    *   When opening a modal, trap keyboard focus within the dialog container.
     *   When closing the modal, return focus to the trigger element that opened it.
     *   Allow users to dismiss modals using the `Escape` key.
+*   **Form Management with React Hook Form (SHOULD)**: For multi-field forms, developers **SHOULD** use **React Hook Form** paired with `zodResolver(schema)` for uncontrolled DOM performance and type safety.
+*   **Lighter Alternative for Single Inputs (MAY)**: Single-input search bars or newsletter subscribe boxes **MAY** use native uncontrolled form actions or simple local `useState` without pulling in React Hook Form.
 
 ---
 
 ## 5. When NOT to Use It (Anti-Complexity Limits)
 
-*   **Div Buttons**: **NEVER** use `<div onClick={...}>` or `<span onClick={...}>` for interactive controls. Always use `<button type="button">`. If you must use a non-button element, you are required to add `role="button"`, `tabIndex={0}`, `onKeyDown` handlers for `Enter` and `Space`, and focus styles.
-*   **Over-ARIA Inflation (First Rule of ARIA)**: If a native HTML element or attribute already possesses the semantics you need, do NOT add ARIA. (e.g. do not write `<div role="heading" aria-level={2}>`; write `<h2>`).
-*   **Outlines Disabled Without Replacement**: Never use `outline: none` or `outline-none` without providing a distinct, visible `focus-visible` ring.
-*   **Suppressing Form Autocomplete**: Do not set `autocomplete="off"` on standard fields (name, email, address, credit card) unless required for single-use security pins. Browsers rely on autocomplete for accessibility and speed.
+*   **Div Buttons (AVOID)**: **NEVER** use `<div onClick={...}>` or `<span onClick={...}>` for clickable controls. Always use `<button type="button">`.
+*   **Over-ARIA Inflation (AVOID)**: The First Rule of ARIA states: *If you can use a native HTML element with the semantics you need, do NOT add ARIA*. Do not write `<div role="button">` when `<button>` exists.
+*   **Stripping Focus Outlines (AVOID)**: Never set `outline: none` or `outline-none` without providing a distinct, high-contrast `focus-visible:ring-2` replacement.
+*   **Suppressing Autocomplete (AVOID)**: Do not set `autocomplete="off"` on standard inputs (name, email, address) unless required for one-time sensitive security tokens.
 
 ---
 

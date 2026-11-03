@@ -51,28 +51,26 @@ The purpose of this standard is to prevent cache staleness bugs, eliminate redun
 
 ## 4. When to Use It
 
-*   **TanStack Query**:
-    *   Use `useQuery` for all asynchronous `GET` endpoints. Always declare unique, structured query keys (`queryKey: ['users', userId]`).
-    *   Use `useMutation` for `POST`, `PUT`, `DELETE` operations. Chain `onSuccess` to invalidate relevant query keys (`queryClient.invalidateQueries({ queryKey: ['users'] })`).
+### Recommendation Strength & Selection Criteria (RFC 2119)
+
+*   **Dedicated Server Cache (SHOULD in Production SPAs)**: Production web applications with multiple asynchronous data-fetching endpoints **SHOULD** adopt **TanStack Query** (or SWR).
+    *   Use `useQuery` with structured array query keys (`['users', userId]`).
+    *   Use `useMutation` with cache invalidation (`queryClient.invalidateQueries(...)`).
     *   Implement `onMutate` for optimistic updates with rollback snapshots.
-*   **Zustand**:
-    *   Use for cross-cutting client UI state (e.g., shopping cart drawer, active modal stack, notification toast queue).
-    *   Always use selectors: `const isDrawerOpen = useUiStore(state => state.isDrawerOpen)`.
-    *   Expose actions alongside state in the store definition.
-*   **URL Search Params**:
-    *   Use for data table search, category filters, sorting directions, and active tab selections.
-*   **`useState` / `useReducer`**:
-    *   Use `useState` for simple component toggles.
-    *   Use `useReducer` when a single component has complex state transitions with multiple interdependent properties.
+*   **Lighter Alternative for Small Apps (MAY)**: Small applications or simple prototypes with minimal remote state **MAY** use vanilla `fetch` inside a dedicated custom hook or rely on Next.js Server Components without introducing TanStack Query.
+*   **Global Client UI State (MAY / SHOULD)**: When UI state must be shared across disconnected component subtrees (e.g., active modal stack, cart drawer, toast notifications), developers **SHOULD** use **Zustand**.
+    *   **Selector Subscriptions (MUST)**: Components subscribing to global stores **MUST** use granular selectors (`useUiStore(s => s.isDrawerOpen)`) to prevent full-tree re-renders.
+*   **Shareable URL State (SHOULD)**: Search queries, category filters, sorting keys, and pagination indices **SHOULD** be synchronized with **URL Search Parameters** (`useSearchParams` or `nuqs`) for bookmarkability.
+*   **Local Component State (SHOULD)**: Ephemeral state isolated to a single component or immediate parent-child hierarchy **SHOULD** use native `useState` or `useReducer`.
 
 ---
 
 ## 5. When NOT to Use It (Anti-Complexity Limits)
 
-*   **Duplicating Server Data in Global Stores**: **NEVER** copy TanStack Query response data into Zustand or Redux stores. Treat TanStack Query as the single source of truth for all remote data.
-*   **Context for Rapidly Changing State**: Do NOT use standard React Context for high-frequency updates (e.g. mouse tracking, input keystrokes, real-time counters).
-*   **URL Bloat**: Do NOT store non-serializable objects, private credentials, or massive data blobs in URL search params.
-*   **Premature Global Stores**: Do not create a Zustand store for state used by only one component and its direct children. Keep it local with `useState`.
+*   **Duplicating Server Data in Global Stores (AVOID)**: **NEVER** copy remote API or TanStack Query response data into Zustand, Redux, or Context stores. Remote state must have a single source of truth.
+*   **Monolithic Context for High-Frequency State (AVOID)**: Do NOT use React Context for rapidly changing values (mouse positions, animation frames, keystroke feeds). Updating Context forces all consumer components to re-render.
+*   **Premature Global Stores (AVOID)**: Do not create a global Zustand store for state used by only one component and its direct children. Keep it local with `useState`.
+*   **URL Bloat (AVOID)**: Do NOT store non-serializable objects, private credentials, or large JSON payloads in URL search params.
 
 ---
 

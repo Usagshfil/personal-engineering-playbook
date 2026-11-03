@@ -60,15 +60,21 @@ try {
     powershell -ExecutionPolicy Bypass -File $ValidatorScript -PlaybookRoot $TempCloneDir
     $ValidatorExitCode = $LASTEXITCODE
 
-    # 6. Run negative test suite on clean clone
+    # 6. Run positive test suite on clean clone
+    Write-Host "`n--- Executing test-validator-positive.ps1 in Clean Clone ---" -ForegroundColor Yellow
+    $PositiveScript = Join-Path $TempCloneDir "tools\test-validator-positive.ps1"
+    powershell -ExecutionPolicy Bypass -File $PositiveScript
+    $PositiveExitCode = $LASTEXITCODE
+
+    # 7. Run negative test suite on clean clone
     Write-Host "`n--- Executing test-validator-negative.ps1 in Clean Clone ---" -ForegroundColor Yellow
     $NegativeScript = Join-Path $TempCloneDir "tools\test-validator-negative.ps1"
     powershell -ExecutionPolicy Bypass -File $NegativeScript
     $NegativeExitCode = $LASTEXITCODE
 
     Write-Host "`n================================================================" -ForegroundColor Cyan
-    Write-Host "Clean Clone Results: Validator ExitCode=$ValidatorExitCode, Negative ExitCode=$NegativeExitCode"
-    if ($ValidatorExitCode -eq 0 -and $NegativeExitCode -eq 0) {
+    Write-Host "Clean Clone Results: Validator ExitCode=$ValidatorExitCode, Positive ExitCode=$PositiveExitCode, Negative ExitCode=$NegativeExitCode"
+    if ($ValidatorExitCode -eq 0 -and $PositiveExitCode -eq 0 -and $NegativeExitCode -eq 0) {
         Write-Host "CLEAN CLONE VERIFICATION PASSED! Repository is fully reproducible." -ForegroundColor Green
         $FinalResult = 0
     } else {

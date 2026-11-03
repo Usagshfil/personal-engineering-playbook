@@ -24,6 +24,14 @@
 +-------------------------------------------------------------------------+
 ```
 
+### Measurement Methodology & Conditions
+To avoid hallucinated performance passes, Core Web Vitals must be interpreted in their empirical measurement context:
+*   **The 75th Percentile Rule (p75)**: A site passes a Core Web Vital metric only if at least **75% of page visits** achieve the "Good" threshold. Averaging metrics is invalid; the 75th percentile of real users determines compliance.
+*   **Field Data (RUM / CrUX) vs. Laboratory Data (Lighthouse)**:
+    *   *Lab Data (Lighthouse / DevTools)*: Synthetic, reproducible testing on simulated throttled CPU/network. Crucial for pre-commit regression checks.
+    *   *Field Data (CrUX / Real User Monitoring)*: Real-world user telemetry collected across actual browsers, devices, and cellular connections. Field data is the **authoritative arbiter** of Core Web Vitals compliance.
+*   **Mobile Segmentation Primacy**: Always audit mobile devices separately. High-end developer laptops with Gigabit fiber will hide main-thread blocking tasks and resource contention that cripple mobile users.
+
 ---
 
 ## 2. Purpose
@@ -43,20 +51,15 @@ The purpose of this standard is to ensure web applications load instantly, respo
 
 ## 4. When to Use It
 
-*   **Largest Contentful Paint (LCP) Optimization**:
-    *   Add `fetchpriority="high"` and `rel="preload"` to the primary above-the-fold hero image.
-    *   Do **NOT** lazy-load above-the-fold images (`loading="eager"`).
-    *   Ensure server HTML contains the critical DOM elements directly rather than requiring a client JavaScript waterfall to inject them.
-*   **Interaction to Next Paint (INP) Optimization**:
-    *   Break tasks exceeding 50ms into micro-tasks via `scheduler.yield()` or `setTimeout`.
-    *   Wrap non-urgent state updates in `startTransition()` or `useTransition()` to keep user typing and clicks responsive.
-    *   Avoid complex calculations inside synchronous event listeners.
-*   **Cumulative Layout Shift (CLS) Optimization**:
-    *   Always supply explicit `width` and `height` attributes (or CSS `aspect-ratio`) on all `<img>`, `<video>`, and `<iframe>` elements.
-    *   Reserve minimum height on dynamic containers (banners, ads, comments) using `min-h-[...]` or skeleton loaders.
-    *   Use `next/font` or `@font-face { font-display: swap; }` with zero layout shift font metrics fallback.
-*   **Code-Splitting & Dynamic Imports**:
-    *   Lazy-load heavy dependencies (charts, rich-text editors, video players) via `dynamic()` or `React.lazy()` so they are fetched only when the user opens the corresponding modal or tab.
+### Normative Engineering Rules (RFC 2119)
+
+*   **Explicit Dimensions for Stability (MUST)**: Developers **MUST** provide explicit `width` and `height` attributes (or CSS `aspect-ratio`) on all `<img>`, `<video>`, and `<iframe>` elements to maintain CLS $\le 0.1$.
+*   **Zero Lazy-Loading on LCP Candidates (MUST)**: Developers **MUST NOT** attach `loading="lazy"` to above-the-fold hero images or primary banner content.
+*   **Hero Preload with Empirical Verification (SHOULD)**: Preload the LCP candidate using `fetchpriority="high"`. *Note*: `fetchpriority` is an optimization tool, not an automatic fix; its effectiveness **MUST** be verified in Chrome DevTools Network Waterfall.
+*   **Input Responsiveness with `useTransition` (SHOULD)**: Wrap non-urgent state updates in `useTransition` or `startTransition` to keep user keystrokes and clicks responsive (INP $\le 200\text{ms}$). The effect **MUST** be verified using the Performance Profiler to confirm elimination of Long Tasks (>50ms).
+*   **Container Space Reservation (SHOULD)**: Reserve minimum container heights (`min-h-[...]` or skeleton loaders) for dynamically injected content (banners, comments, advertisements).
+*   **Dynamic Code-Splitting (SHOULD)**: Code-split heavy dependencies (charts, rich-text editors, video players) via `dynamic()` or `React.lazy()` so they load on demand.
+*   **Zero-Shift Font Strategy (SHOULD)**: Use `next/font` or `@font-face { font-display: swap; }` paired with size-adjust fallbacks to eliminate Flash of Unstyled Text (FOUT) layout shifts.
 
 ---
 

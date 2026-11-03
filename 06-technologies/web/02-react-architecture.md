@@ -8,22 +8,33 @@
 
 ## 1. Definition & Core Concept
 
-**Modern React Architecture** is organized around **Declarative Component Composition**, **Strict Render Purity**, and the **Server / Client Component Boundary (React Server Components — RSC)**.
+**Modern React Architecture** is organized around **Declarative Component Composition**, **Strict Render Purity**, and **Framework-Appropriate Execution Boundaries**.
 
-In modern React, components are pure functions of their props and state. Computation is partitioned into:
-1.  **Server Components (Default)**: Execute strictly on the server or build machine. Zero client-side JavaScript bundle impact. Direct access to databases, filesystems, and internal microservices.
-2.  **Client Components (`'use client'`)**: Opt-in interactivity boundaries that hydrate in the browser to handle user interactions, DOM event listeners, and browser APIs (`useState`, `useEffect`, `localStorage`).
+React applications fall into two primary architectural models, both anchored by the **Universal React Core**:
+
+1.  **Universal React Core (Universal to ALL React Applications)**:
+    *   Components are pure functions of their inputs (props, state, context).
+    *   Unidirectional data flow (state flows down, events flow up).
+    *   Hooks rules, error isolation via `<ErrorBoundary>`, and asynchronous loading via `<Suspense>`.
+2.  **Server-Driven Architecture (React Server Components — Next.js App Router, Remix)**:
+    *   **Server Components (Default)**: Execute strictly on the server or build machine. Zero client JavaScript bundle impact. Direct access to databases, filesystems, and backend caches.
+    *   **Client Components (`'use client'`)**: Leaf-level interactive boundaries that hydrate in the browser to handle user events, DOM listeners, and browser state (`useState`).
+3.  **Client-Only Single Page Applications (Vite, Standard SPAs)**:
+    *   All components execute and render on the client browser.
+    *   `'use client'` directives are unnecessary or treated as no-ops.
+    *   Data fetching is orchestrated via client caching libraries (**TanStack Query**) rather than server component fetches.
 
 ```
 +-------------------------------------------------------------------------+
-| React Server Component (RSC) Boundary Model                             |
+| Framework Execution Architecture Comparison                             |
 |                                                                         |
-| Server Component (e.g., UserDashboardPage - Zero client JS bundle)      |
-|    |---> Server Component (UserStatsDisplay - reads DB directly)        |
-|    |                                                                    |
-|    `---> [ 'use client' Boundary ] (InteractiveAvatarSelector)          |
-|             |---> Client Hook (useState, onClick handler)               |
-|             `---> Browser DOM Event Listeners                           |
+| [ Server-Driven / RSC (Next.js) ]     [ Client-Only SPA (Vite) ]        |
+|                                                                         |
+| Server Component (Zero Client Bundle)    App Root Component (Client JS) |
+|    |---> Server Data Fetch (DB/API)          |---> TanStack Query Client|
+|    |                                         |                          |
+|    `---> [ 'use client' Boundary ]           `---> Standard Client      |
+|             |---> Browser DOM Events                  Interactive UI    |
 +-------------------------------------------------------------------------+
 ```
 
@@ -31,43 +42,54 @@ In modern React, components are pure functions of their props and state. Computa
 
 ## 2. Purpose
 
-The purpose of this standard is to minimize client bundle footprints, eliminate unnecessary component re-renders, avoid hook antipatterns (especially `useEffect` sprawl), and build resilient, accessible UIs using composable component patterns.
+The purpose of this standard is to ensure clean component boundaries, eliminate hook antipatterns (particularly `useEffect` misuse), prevent main-thread hydration bottlenecks, and select the right architectural pattern for the project's requirements without forcing RSC where a client SPA is more appropriate.
 
 ---
 
 ## 3. Why It Matters
 
-*   **Zero-Bundle Server Execution**: Pushing data fetching and heavy transformations into Server Components keeps megabytes of dependencies (parsers, date libraries, markdown renderers) out of client JavaScript bundles.
-*   **Predictable Rendering Lifecycles**: Pure render functions prevent subtle race conditions, infinite render loops, and stale closure bugs.
-*   **Encapsulated Component Logic**: Custom hooks isolate complex asynchronous orchestration, keyboard interactions, and event subscriptions, leaving UI components clean and focused purely on markup presentation.
-*   **Fault Isolation**: Granular `<ErrorBoundary>` and `<Suspense>` wrappers guarantee that a failure in an isolated widget (e.g. recommendations carousel) does not crash the entire application screen.
+*   **Zero-Bundle Server Execution (in RSC)**: In server-driven setups, heavy libraries (markdown parsers, date formatters, sanitizers) execute on the server and ship 0 KB of JavaScript to the user's browser.
+*   **Predictable Rendering Lifecycles**: Pure render functions eliminate race conditions, infinite render loops, and stale closures.
+*   **Encapsulated Stateful Logic**: Custom hooks isolate complex asynchronous orchestration and event subscriptions, leaving UI components focused purely on presentation.
+*   **Targeted Fault Isolation**: Granular `<ErrorBoundary>` and `<Suspense>` boundaries ensure a failure in an isolated widget (e.g. recommendations carousel) does not crash the entire application screen.
 
 ---
 
 ## 4. When to Use It
 
-*   **Server Components (RSC)**: Default to Server Components for layout scaffolding, data fetching, static content, and search-engine-indexed pages.
-*   **Client Components (`'use client'`)**: Mark a file with `'use client'` strictly at the lowest possible leaf level where client interactivity is required (button clicks, form inputs, local state, animations).
-*   **Component Composition Patterns**:
-    *   *Compound Components*: Use when sub-components share implicit state and must work together flexibly (e.g., `<Accordion>`, `<Tabs>`, `<Select>`).
-    *   *Slot Pattern (`asChild`)*: Use composition over deep prop drilling to allow consumers to render custom wrappers (e.g. rendering a Next.js `<Link>` as a `<Button>`).
-*   **Hook Discipline**:
-    *   *Derived State*: Compute derived values during render:
-        ```typescript
-        // GOOD: Pure calculation during render; zero useEffect or extra useState
-        const fullName = `${firstName} ${lastName}`;
-        const filteredItems = useMemo(() => items.filter(i => i.active), [items]);
-        ```
-    *   *Custom Hooks*: Extract reusable UI logic into custom hooks prefixed with `use` (e.g., `useDebounce`, `useLocalStorage`, `useIntersectionObserver`).
+### Framework Selection Decision Matrix
+*   **Choose Server-Driven / RSC (Next.js App Router)** when:
+    *   Public-facing web applications requiring Search Engine Optimization (SEO).
+    *   Content-heavy websites, marketing portals, e-commerce, or blogs.
+    *   Applications where direct database access reduces internal API boilerplate.
+*   **Choose Client-Only SPA (Vite)** when:
+    *   Internal enterprise dashboards, admin panels behind authentication.
+    *   Offline-first applications (PWAs) or heavy desktop-like browser tools (canvas, editors).
+    *   Teams requiring simple static hosting (S3/Cloudflare Pages) without server runtimes.
+
+### Normative Engineering Rules (RFC 2119)
+*   **Render Purity (MUST)**: Component render functions **MUST** remain pure. Do NOT trigger side effects, mutate external variables, or perform network requests during render.
+*   **Hook Dependency Integrity (MUST)**: Developers **MUST** satisfy `eslint-plugin-react-hooks/exhaustive-deps`. Disabling or suppressing hook dependency warnings is strictly prohibited.
+*   **Leaf-Level Client Boundaries (SHOULD in RSC)**: In Server Component applications, developers **SHOULD** push `'use client'` to the lowest possible leaf interactive elements (buttons, inputs, local drawers) to maximize server-rendered HTML.
+*   **Pure Derived State (SHOULD)**: Compute derived values directly during render rather than synchronizing them via `useEffect` + `useState`:
+    ```typescript
+    // GOOD: Pure calculation during render; zero useEffect
+    const fullName = `${firstName} ${lastName}`;
+    const filteredItems = useMemo(() => items.filter(i => i.active), [items]);
+    ```
+*   **Component Composition Patterns (MAY)**:
+    *   *Compound Components*: Use when sub-components share implicit state (e.g. `<Accordion>`, `<Tabs>`, `<Select>`).
+    *   *Slot Pattern (`asChild`)*: Use composition over deep prop drilling to allow consumers to render custom wrappers.
+*   **Custom Hooks (SHOULD)**: Extract reusable UI orchestration into custom hooks prefixed with `use` (e.g., `useDebounce`, `useIntersectionObserver`).
 
 ---
 
 ## 5. When NOT to Use It (Anti-Complexity Limits)
 
-*   **`useEffect` for Data Fetching or Derived State**: **NEVER** use `useEffect` to fetch data in modern React (use TanStack Query, Next.js Server Components, or React 19 `use()`). Never use `useEffect` to synchronize state that can be calculated during render.
-*   **Marking Top-Level Layouts as `'use client'`**: Placing `'use client'` at the root of a page or layout forces the entire sub-tree into client-side hydration, forfeiting the performance and bundle benefits of RSC.
-*   **Prop-Drilling Megastructures**: Do not pass callbacks or state down through more than 2–3 levels of intermediate components. Use component composition (`children`), compound components, or lightweight stores (Zustand).
-*   **Cheating Hook Dependencies**: **NEVER** disable `eslint-plugin-react-hooks/exhaustive-deps`. Omitting dependencies causes stale closures, invisible bugs, and memory leaks.
+*   **`useEffect` for Data Fetching or Derived State (AVOID)**: **NEVER** use `useEffect` to fetch data in modern React (use TanStack Query for client SPAs, Server Components for RSC, or React 19 `use()`). Never use `useEffect` to synchronize state that can be calculated during render.
+*   **Mandating RSC in Client SPAs (AVOID)**: Do NOT force RSC patterns, `'use client'` directives, or server actions in pure client Vite applications.
+*   **Top-Level `'use client'` on Layouts (AVOID)**: In RSC frameworks, placing `'use client'` on a root layout forces the entire subtree into client hydration, negating RSC performance benefits.
+*   **Prop-Drilling Megastructures (AVOID)**: Do not pass callbacks or state down through more than 2–3 levels of intermediate components. Use component composition (`children`), compound components, or lightweight stores (Zustand).
 
 ---
 
