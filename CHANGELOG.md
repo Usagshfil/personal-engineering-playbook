@@ -17,7 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented interactive colored wizard and non-interactive scripted project generator supporting 4 architectural profiles: **Android Mobile Client** (Compose, Room SSOT, WorkManager, Version Catalogs, Fastlane), **Modern Web Frontend** (React 19, TypeScript, Tailwind), **Backend API** (Clean Architecture/DDD, PostgreSQL 16 migrations, Outbox pattern), and **Distributed Full-Stack** (cross-domain harmonization).
   - Automatically injects immutable Level 1 Core (`AGENTS.md`), generates customized Level 3 Project Overlay (`.agent/PROJECT.md`), and configures tool-specific adapters (`.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`).
   - Pre-populates operational progress tracking (`PROJECT_PROGRESS.md`), core planning templates (`PROJECT_BRIEF.md`, `REQUIREMENTS_SPEC.md`, `TECHNICAL_DESIGN.md`, `0001-initial-architecture.md`), CI/CD quality gate workflows, and strict secret defense in `.gitignore`.
-  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying all 4 profiles and secret protection with **46/46 passing assertions**.
+  - **Modular & Optional Tooling Support**:
+    - `-IncludeAgentDocs`: Bundles 5 curated skills (`.agent/skills/`), 4 agent personas (`.agent/roles/`), embedded Level 2 technology standards (`docs/standards/<profile>/`), modular Cursor rules (`.cursor/rules/*.mdc`), and the Team Vibe Coding Playbook (`.agent/VIBE_CODING_PLAYBOOK.md`).
+    - `-IncludeCodeRabbit`: Generates pre-tuned `.coderabbit.yaml` enforcing Level 1 safety rules, Compose test tags, and Room persistence gates on GitHub PRs.
+    - `-IncludeMcp`: Generates `.cursor/mcp.json` and `.claude/mcp.json` configured for Figma MCP, GitHub MCP, and PostgreSQL MCP servers, plus `FIGMA_TO_COMPOSE.md` and `TOOLING_AND_MCP_GUIDE.md`.
+    - `-IncludeMintlify`: Generates complete static documentation site (`docs.json`, `index.mdx`).
+  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying lean zero-bloat scaffolding, all optional modules, and all 4 profiles with **61/61 passing assertions**.
 - **Static Documentation Site via Mintlify**:
   - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).
   - Authored interactive landing page `index.mdx` with Quick Start steps, card grids, and 5-pillar navigation.

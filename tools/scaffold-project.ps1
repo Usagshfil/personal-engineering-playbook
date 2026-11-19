@@ -19,6 +19,12 @@ param(
     [ValidateSet("gitflow", "trunk-based")]
     [string]$DeliveryModel = "gitflow",
 
+    [switch]$IncludeAgentDocs,
+
+    [switch]$IncludeCodeRabbit,
+
+    [switch]$IncludeMcp,
+
     [switch]$IncludeMintlify,
 
     [switch]$Force,
@@ -109,8 +115,18 @@ if (-not $NonInteractive -and [string]::IsNullOrWhiteSpace($ProjectName)) {
     $DeliveryChoice = Read-Host "Choose workflow [1-2] (Default: 1)"
     if ($DeliveryChoice -eq "2") { $DeliveryModel = "trunk-based" } else { $DeliveryModel = "gitflow" }
 
-    # 6. Documentation Platform
-    $MintlifyChoice = Read-Host "`nInclude static Mintlify documentation site config? [y/N] (Default: N)"
+    # 6. Optional Tooling & Agent Integrations
+    Write-Host "`nSelect Optional Tooling & Agent Integrations:" -ForegroundColor Cyan
+    $AgentDocsChoice = Read-Host "  [?] Include Curated Agent Skills & Tech Standards (.agent/skills & docs/standards)? [Y/n] (Default: Y)"
+    if ($AgentDocsChoice -notmatch "^[nN]") { $IncludeAgentDocs = $true }
+
+    $CodeRabbitChoice = Read-Host "  [?] Include CodeRabbit AI PR review config (.coderabbit.yaml)? [y/N] (Default: N)"
+    if ($CodeRabbitChoice -match "^[yY]") { $IncludeCodeRabbit = $true }
+
+    $McpChoice = Read-Host "  [?] Include Figma & Model Context Protocol (MCP) config (.cursor/mcp.json)? [y/N] (Default: N)"
+    if ($McpChoice -match "^[yY]") { $IncludeMcp = $true }
+
+    $MintlifyChoice = Read-Host "  [?] Include static Mintlify documentation site config (docs.json)? [y/N] (Default: N)"
     if ($MintlifyChoice -match "^[yY]") { $IncludeMintlify = $true }
 }
 
@@ -133,6 +149,9 @@ Write-Host "Target Directory : $TargetFullPath"
 Write-Host "Profile          : $Profile"
 Write-Host "Package ID       : $PackageId"
 Write-Host "Delivery Model   : $DeliveryModel"
+Write-Host "Agent Skills/Docs: $(if ($IncludeAgentDocs) { 'Yes' } else { 'No' })"
+Write-Host "CodeRabbit Gate  : $(if ($IncludeCodeRabbit) { 'Yes' } else { 'No' })"
+Write-Host "Figma & MCP Stubs: $(if ($IncludeMcp) { 'Yes' } else { 'No' })"
 Write-Host "Mintlify Docs    : $(if ($IncludeMintlify) { 'Yes' } else { 'No' })`n"
 
 if (Test-Path $TargetFullPath) {
@@ -831,7 +850,350 @@ jobs:
 }
 
 # -----------------------------------------------------------------
-# 5. Optional Static Documentation Site (Mintlify)
+# 5. Optional Deep Agent Documentation & Skills
+# -----------------------------------------------------------------
+if ($IncludeAgentDocs) {
+    Write-InfoStep "Scaffolding Curated Agent Skills, Personas, Standards & Vibe Coding Playbook..."
+    
+    # 5.1 Curated Skills (.agent/skills/)
+    $CoreSkills = @(
+        "coding-and-implementation",
+        "testing-and-qa",
+        "code-review",
+        "debugging",
+        "git-and-version-control"
+    )
+    foreach ($Skill in $CoreSkills) {
+        $SourceSkillDir = Join-Path $PlaybookRoot "05-skills/$Skill"
+        $DestSkillDir = Join-Path $TargetFullPath ".agent/skills/$Skill"
+        if (Test-Path $SourceSkillDir) {
+            Ensure-Dir ".agent/skills/$Skill"
+            Copy-Item -Path (Join-Path $SourceSkillDir "*") -Destination $DestSkillDir -Recurse -Force
+            Write-SuccessStep "Copied .agent/skills/$Skill"
+        }
+    }
+
+    # 5.2 Specialized Agent Roles (.agent/roles/)
+    Ensure-Dir ".agent/roles"
+    $CoreRoles = @(
+        "coding-agent.md",
+        "review-agent.md",
+        "testing-agent.md",
+        "debugging-agent.md"
+    )
+    foreach ($Role in $CoreRoles) {
+        $SourceRole = Join-Path $PlaybookRoot "04-agents/roles/$Role"
+        if (Test-Path $SourceRole) {
+            Copy-Item -Path $SourceRole -Destination (Join-Path $TargetFullPath ".agent/roles/$Role") -Force
+            Write-SuccessStep "Copied .agent/roles/$Role"
+        }
+    }
+
+    # 5.3 Embedded Level 2 Technology Standards (docs/standards/<profile>/)
+    Ensure-Dir "docs/standards"
+    switch ($Profile) {
+        "android" {
+            Ensure-Dir "docs/standards/android"
+            $AndroidGuides = @(
+                "01-kotlin-idioms.md",
+                "02-jetpack-compose.md",
+                "03-coroutines-and-flow.md",
+                "04-room-database.md",
+                "07-architecture-patterns.md",
+                "09-offline-first-and-sync.md",
+                "10-mobile-testing-and-qa.md"
+            )
+            foreach ($Guide in $AndroidGuides) {
+                $SourceGuide = Join-Path $PlaybookRoot "06-technologies/android/$Guide"
+                if (Test-Path $SourceGuide) {
+                    Copy-Item -Path $SourceGuide -Destination (Join-Path $TargetFullPath "docs/standards/android/$Guide") -Force
+                }
+            }
+            Write-SuccessStep "Copied Level 2 Android Tech Standards to docs/standards/android/"
+        }
+        "web" {
+            Ensure-Dir "docs/standards/web"
+            $WebGuides = Get-ChildItem -Path (Join-Path $PlaybookRoot "06-technologies/web") -Filter "*.md"
+            foreach ($Guide in $WebGuides) {
+                Copy-Item -Path $Guide.FullName -Destination (Join-Path $TargetFullPath "docs/standards/web/$($Guide.Name)") -Force
+            }
+            Write-SuccessStep "Copied Level 2 Web Tech Standards to docs/standards/web/"
+        }
+        "backend" {
+            Ensure-Dir "docs/standards/backend"
+            $BackendGuides = Get-ChildItem -Path (Join-Path $PlaybookRoot "06-technologies/backend") -Filter "*.md"
+            foreach ($Guide in $BackendGuides) {
+                Copy-Item -Path $Guide.FullName -Destination (Join-Path $TargetFullPath "docs/standards/backend/$($Guide.Name)") -Force
+            }
+            Ensure-Dir "docs/standards/database"
+            $DbGuides = Get-ChildItem -Path (Join-Path $PlaybookRoot "06-technologies/database") -Filter "*.md"
+            foreach ($Guide in $DbGuides) {
+                Copy-Item -Path $Guide.FullName -Destination (Join-Path $TargetFullPath "docs/standards/database/$($Guide.Name)") -Force
+            }
+            Write-SuccessStep "Copied Level 2 Backend & Database Standards to docs/standards/"
+        }
+        "fullstack" {
+            Ensure-Dir "docs/standards"
+            Copy-Item -Path (Join-Path $PlaybookRoot "06-technologies/*") -Destination (Join-Path $TargetFullPath "docs/standards/") -Recurse -Force
+            Write-SuccessStep "Copied All Level 2 Tech Standards to docs/standards/"
+        }
+    }
+
+    # 5.4 Modular Cursor Rules (.cursor/rules/*.mdc)
+    Ensure-Dir ".cursor/rules"
+    $ArchRuleContent = @"
+---
+description: Universal Clean Architecture & Safety Rules
+globs: **/*
+alwaysApply: true
+---
+# Universal Architecture & Safety Rules
+- Adhere strictly to AGENTS.md and .agent/PROJECT.md.
+- Never commit credentials, private keys, or API tokens.
+- Do not delete or silently overwrite existing functions or tests.
+- Always provide automated tests for domain logic and bug fixes.
+"@
+    Write-TargetFile ".cursor/rules/architecture.mdc" $ArchRuleContent
+
+    if ($Profile -eq "android") {
+        $ComposeRuleContent = @"
+---
+description: Jetpack Compose & UI Best Practices
+globs: app/src/main/**/presentation/**/*.kt
+alwaysApply: false
+---
+# Jetpack Compose Best Practices
+- Follow Unidirectional Data Flow (UDF) with explicit UiState data classes.
+- Use stateless Composables with event lambda callbacks.
+- Reference design system colors/typography from Theme.kt (never hardcode hex colors).
+- Add Modifier.testTag("...") to all interactive clickables.
+- Use remember and derivedStateOf to prevent unnecessary recompositions.
+"@
+        Write-TargetFile ".cursor/rules/android-compose.mdc" $ComposeRuleContent
+
+        $RoomRuleContent = @"
+---
+description: Room Database & Offline-First SSOT Rules
+globs: app/src/main/**/data/**/*.kt
+alwaysApply: false
+---
+# Room Persistence Rules
+- Room is the Single Source of Truth (SSOT). UI observes Room via Flow streams.
+- Writes modify Room first (optimistic UI), followed by background sync via WorkManager.
+- Keep Room entities immutable (@Entity data class).
+- Never expose raw Room entities to the presentation layer; map to domain models.
+"@
+        Write-TargetFile ".cursor/rules/android-room.mdc" $RoomRuleContent
+    }
+
+    # 5.5 Team Vibe Coding Playbook (.agent/VIBE_CODING_PLAYBOOK.md)
+    $VibeCodingContent = @'
+# Team Vibe Coding Playbook for {{PROJECT_NAME}}
+
+> **Operating Standard for Engineering Teams Using AI Coding Agents**  
+> **Playbook Precedence**: Project Rules > Tech Standards > Universal Core Invariants
+
+---
+
+## 1. The 5 Golden Rules of Team Vibe Coding
+
+1. **Interface-First, Vibe-Second**:
+   - Define domain models in `:core:model` and repository interfaces in `:core:data` first.
+   - Once merged to `develop`, all developers can vibe code UI screens simultaneously without merge conflicts.
+2. **Use the 3-Part Prompt Template**:
+   - Always supply **[Context]**, **[Task & Boundary]**, and **[Verification]**.
+3. **Lock Down Gradle Dependencies**:
+   - Agents are forbidden from editing `libs.versions.toml` or `build.gradle.kts` without explicit human authorization.
+4. **One Feature Slice Per Chat Session**:
+   - Avoid context decay. Start a fresh chat for every distinct ViewModel, Screen, or DAO.
+5. **Agent as Pull Request Reviewer**:
+   - Run an AI review before opening a PR to catch missing test tags, hardcoded strings, or memory leaks.
+
+---
+
+## 2. The 3-Part Prompt Template
+
+When instructing an agent to implement a feature, use this exact structure:
+
+```text
+[CONTEXT]
+You are working on {{PROJECT_NAME}} adhering to AGENTS.md and .agent/PROJECT.md.
+Read :core:model/<RelevantModel>.kt and :core:designsystem/Theme.kt.
+
+[TASK & BOUNDARY]
+Implement <TargetScreen> inside <TargetModule>.
+- Follow Unidirectional Data Flow (UDF) with a sealed/data class UiState.
+- Constraint: You are ONLY permitted to edit files inside <TargetModule>.
+- Do NOT touch Gradle files or other modules.
+
+[VERIFICATION]
+Write a JVM unit test for <TargetViewModelTest> verifying all state transitions.
+Verify tests pass before proposing completion.
+```
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+    Write-TargetFile ".agent/VIBE_CODING_PLAYBOOK.md" $VibeCodingContent
+}
+
+# -----------------------------------------------------------------
+# 6. Optional CodeRabbit Configuration
+# -----------------------------------------------------------------
+if ($IncludeCodeRabbit) {
+    Write-InfoStep "Scaffolding CodeRabbit AI Code Review Configuration..."
+    $CodeRabbitYaml = @"
+# .coderabbit.yaml - CodeRabbit AI Code Review Configuration for $ProjectName
+# Aligned with the Personal Software Engineering Playbook (v1.0.0-rc.1)
+
+version: "2"
+language: "en-US"
+tone_instructions: "Act as a disciplined, senior software engineering collaborator. Be concise, objective, and pragmatic. Point out security vulnerabilities, performance anti-patterns, and architectural violations."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "develop"
+
+chat:
+  auto_reply: true
+
+path_filters:
+  - "!build/**"
+  - "!**/.gradle/**"
+  - "!**/dist/**"
+  - "!**/node_modules/**"
+  - "!**/*.lock"
+  - "!gradle/wrapper/**"
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "project"
+
+instructions: |
+  Review this Pull Request against the following engineering standards:
+  1. Universal Safety Gate (Level 1):
+     - Zero hardcoded secrets, tokens, private keys, or API credentials.
+     - Never bypass verification: require automated unit tests for business logic and bug fixes.
+     - Reject silent function deletions or accidental file destruction.
+  2. Architecture & Code Quality:
+     - Adhere to Clean Architecture layer boundaries defined in .agent/PROJECT.md.
+     - Ensure UI state follows Unidirectional Data Flow (UDF) with explicit UiState.
+     - Verify that all interactive UI clickables include test tags for automated testing.
+     - Check that all network inputs and database queries handle error states gracefully.
+"@
+    Write-TargetFile ".coderabbit.yaml" $CodeRabbitYaml
+}
+
+# -----------------------------------------------------------------
+# 7. Optional Model Context Protocol (MCP) & Figma
+# -----------------------------------------------------------------
+if ($IncludeMcp) {
+    Write-InfoStep "Scaffolding Model Context Protocol (MCP) Stubs for Figma & Tools..."
+    
+    Ensure-Dir ".cursor"
+    Ensure-Dir ".claude"
+
+    $CursorMcpJson = @"
+{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-figma"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "`${FIGMA_ACCESS_TOKEN}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "`${GITHUB_TOKEN}"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "`${DATABASE_URL:-postgresql://localhost:5432/app_db}"]
+    }
+  }
+}
+"@
+    Write-TargetFile ".cursor/mcp.json" $CursorMcpJson
+
+    $ClaudeMcpJson = @"
+{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-figma"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "`${FIGMA_ACCESS_TOKEN}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "`${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+"@
+    Write-TargetFile ".claude/mcp.json" $ClaudeMcpJson
+
+    if ($Profile -eq "android") {
+        Ensure-Dir "docs/standards/android"
+        $FigmaToComposeDoc = @'
+# Figma-to-Compose Implementation Guide: {{PROJECT_NAME}}
+
+> Design System & MCP Translation Workflow
+
+## 1. Connecting Figma via MCP
+1. Generate a Figma Personal Access Token in your Figma account settings.
+2. Set the environment variable in your terminal or .env:
+   `export FIGMA_ACCESS_TOKEN="figd_..."`
+3. In Cursor or Claude Code, reference Figma nodes via MCP:
+   `@figma https://www.figma.com/design/<file-id>?node-id=1-2`
+
+## 2. Design Token Translation Rules
+*   **Colors**: Map Figma color variables directly to `:core:designsystem/Theme.kt` (`MaterialTheme.colorScheme.*`). Never hardcode hex codes in feature Composables.
+*   **Typography**: Map Figma text styles to `MaterialTheme.typography.*`.
+*   **Spacing**: Use 4dp/8dp grid tokens from `:core:designsystem/Spacing.kt`.
+*   **Vector Assets**: Export vector icons from Figma as SVGs, convert to Android Vector Drawables, and place in `app/src/main/res/drawable/`.
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+        Write-TargetFile "docs/standards/android/FIGMA_TO_COMPOSE.md" $FigmaToComposeDoc
+    }
+
+    $McpGuideDoc = @'
+# Model Context Protocol (MCP) & Tooling Guide: {{PROJECT_NAME}}
+
+## 1. Overview
+This project includes pre-configured MCP definitions in `.cursor/mcp.json` and `.claude/mcp.json` enabling AI agents to query external tools:
+*   **Figma MCP**: Inspect design files, tokens, and frame layouts.
+*   **GitHub MCP**: Query PRs, issue descriptions, and repository context.
+*   **PostgreSQL MCP**: Inspect local database schemas, table definitions, and migrations.
+
+## 2. Environment Variables Required
+Store these in your local environment or `.env` (NEVER commit credentials):
+```bash
+export FIGMA_ACCESS_TOKEN="figd_your_personal_access_token"
+export GITHUB_TOKEN="ghp_your_github_token"
+export DATABASE_URL="postgresql://user:password@localhost:5432/app_db"
+```
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+    Write-TargetFile ".agent/TOOLING_AND_MCP_GUIDE.md" $McpGuideDoc
+}
+
+# -----------------------------------------------------------------
+# 8. Optional Static Documentation Site (Mintlify)
 # -----------------------------------------------------------------
 if ($IncludeMintlify) {
     Write-InfoStep "Scaffolding Mintlify Documentation Site..."
@@ -896,7 +1258,7 @@ Welcome to the official developer documentation for **$ProjectName**.
 }
 
 # -----------------------------------------------------------------
-# 6. Root README.md
+# 9. Root README.md
 # -----------------------------------------------------------------
 $ReadmeContent = @"
 # $ProjectName
@@ -949,7 +1311,7 @@ $$\text{Project Rules (Level 3)} \succ \text{Technology Standards (Level 2)} \su
 Write-TargetFile "README.md" $ReadmeContent
 
 # -----------------------------------------------------------------
-# 7. Git Initialization & Summary
+# 10. Git Initialization & Summary
 # -----------------------------------------------------------------
 Write-Header "PROJECT SCAFFOLDED SUCCESSFULLY!"
 Write-Host "Project Name : $ProjectName" -ForegroundColor Green
