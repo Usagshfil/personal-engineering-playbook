@@ -45,7 +45,7 @@ This playbook is organized around answering five fundamental questions for any s
 * **Security & Privacy Baseline**: Enforce STRIDE threat modeling, least privilege, zero hardcoded secrets, and PII protection in [`10-security-and-privacy/`](10-security-and-privacy/README.md).
 
 ### 2. How Should I Do It? (Technology Standards & Cross-Domain Harmonization)
-* **Android Development (Priority 1)**: Modern Kotlin 2.0, Jetpack Compose, Coroutines/StateFlow, Room persistence, Dagger Hilt, and Gradle Version Catalogs in [`06-technologies/android/`](06-technologies/android/README.md).
+* **Android Development (Priority 1)**: 11 comprehensive guides covering Modern Kotlin 2.0, Jetpack Compose, Coroutines/StateFlow, Room persistence, Dagger Hilt, Retrofit API design, Gradle Version Catalogs, Offline-First Sync Engines (WorkManager & tombstones), Mobile UI/E2E Testing (Compose Test, Roborazzi, Maestro), and Release Engineering (AAB, R8 Full Mode, Keystore security, Fastlane) in [`06-technologies/android/`](06-technologies/android/README.md).
 * **Web Frontend (Priority 2)**: Strict TypeScript 5.5+, React 19, Tailwind CSS, TanStack Query, and WCAG 2.1 AA accessibility in [`06-technologies/web/`](06-technologies/web/README.md).
 * **Backend & APIs (Priority 3)**: RESTful API design, Zod boundary validation, RFC 9457 Problem Details, Unit of Work, and idempotency in [`06-technologies/backend/`](06-technologies/backend/README.md).
 * **Database & Persistence (Priority 4)**: PostgreSQL 16+ schemas, 3NF normalization, composite indexing, expand-and-contract migrations, and concurrency in [`06-technologies/database/`](06-technologies/database/README.md).

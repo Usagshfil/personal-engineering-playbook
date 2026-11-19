@@ -290,8 +290,8 @@ if (Test-Path $VersionFile) {
 Write-Host "`n--- TEST SUITE 5: Technology Standards Pedagogical Schema Validation ---" -ForegroundColor Yellow
 
 $TechDir = Join-Path $PlaybookRoot "06-technologies"
-$TechGuideFiles = Get-ChildItem -Path $TechDir -Recurse -File -Filter "0*.md"
-Write-Host "Found $($TechGuideFiles.Count) technology guides for pedagogical validation (Expected: 27).`n"
+$TechGuideFiles = Get-ChildItem -Path $TechDir -Recurse -File | Where-Object { $_.Name -match '^[0-9]{2}-.+\.md$' } | Sort-Object FullName
+Write-Host "Found $($TechGuideFiles.Count) technology guides for pedagogical validation (Expected: 30).`n"
 
 $RequiredPedagogicalSections = @(
     "1. Definition & Core Concept",
