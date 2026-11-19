@@ -1,5 +1,6 @@
 ---
 name: project-planning
+sidebarTitle: "Project Planning"
 description: Analyze project ideas, objectives, scope boundaries, technical constraints, feasibility, work breakdown structure (WBS), and phased delivery milestones. Use when starting a new project, scoping a major initiative, or breaking down a complex multi-stage deliverable.
 license: MIT
 compatibility: Universal (any OS or programming environment)

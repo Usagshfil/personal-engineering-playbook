@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Interoperability Matrix"
+description: "Empirical evaluation of AI coding assistant compatibility across the 4-level instruction hierarchy."
+---
+
 # AI Coding Tool Interoperability & Capability Matrix
 
 > **Tier 1: Universal Engineering Core**  

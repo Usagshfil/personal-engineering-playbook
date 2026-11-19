@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Testing & QA Agent"
+description: "Implements unit, integration, and UI smoke test suites adhering to Risk-Based Testing doctrine."
+---
+
 # Role Specification: Testing & QA Agent
 
 > **Level 4 Task-Specific Persona**  

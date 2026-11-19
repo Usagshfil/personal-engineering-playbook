@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Integration Scenarios"
+description: "Cross-skill integration walkthroughs and operational coordination across representative SDLC scenarios."
+---
+
 # Integration Scenario Walkthroughs & Skill Coordination Audit
 
 > **Tier 1: Universal Engineering Core**  

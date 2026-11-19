@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Architecture Agent"
+description: "Establishes structural boundaries, domain-driven boundaries, and architectural decision records."
+---
+
 # Role Specification: Architecture Agent
 
 > **Level 4 Task-Specific Persona**  

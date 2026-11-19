@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Documentation Agent"
+description: "Authors and maintains living technical documentation, specifications, and architecture decision records."
+---
+
 # Role Specification: Documentation Agent
 
 > **Level 4 Task-Specific Persona**  

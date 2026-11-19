@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Coding Agent"
+description: "Executes idiomatic, type-safe implementation adhering to Clean Architecture and zero-overwrite rules."
+---
+
 # Role Specification: Coding Agent
 
 > **Level 4 Task-Specific Persona**  

@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Scrum Master Agent"
+description: "Facilitates Scrum ceremonies, coaches agile delivery, and enforces sprint cadence and definition of done."
+---
+
 # Role Specification: Scrum Master & Agile Coach Agent
 
 > **Level 4 Task-Specific Persona**  

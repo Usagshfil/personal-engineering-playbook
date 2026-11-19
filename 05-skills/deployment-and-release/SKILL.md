@@ -1,5 +1,6 @@
 ---
 name: deployment-and-release
+sidebarTitle: "Deployment & Release"
 description: Prepare production builds, configure cryptographic binary signing, execute R8 shrinking and obfuscation, verify release checklists, and author user-facing release notes. Use when packaging, releasing, or deploying applications.
 license: MIT
 compatibility: Universal (any OS or programming environment)

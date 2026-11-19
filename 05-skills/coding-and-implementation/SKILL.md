@@ -1,5 +1,6 @@
 ---
 name: coding-and-implementation
+sidebarTitle: "Coding & Implementation"
 description: Implement features, classes, and UI screens using established architecture, clean code principles, immutability, and typed error handling. Use when writing, modifying, or refactoring production application code.
 license: MIT
 compatibility: Universal (any OS or programming environment)

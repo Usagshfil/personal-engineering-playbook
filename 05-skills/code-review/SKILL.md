@@ -1,5 +1,6 @@
 ---
 name: code-review
+sidebarTitle: "Code Review"
 description: Review pull requests, commits, and code diffs for architectural integrity, security flaws, performance bottlenecks, maintainability, and testing adequacy. Use when conducting peer reviews or pre-commit audits.
 license: MIT
 compatibility: Universal (any OS or programming environment)

@@ -1,5 +1,6 @@
 ---
 name: database-engineering
+sidebarTitle: "Database Engineering"
 description: Design relational databases, entities, relationships, foreign keys, indexes, 3NF normalization, and non-destructive migrations. Use when creating or modifying persistent data models, schemas, or data access objects.
 license: MIT
 compatibility: Universal (any OS or programming environment)

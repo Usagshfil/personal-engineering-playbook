@@ -1,5 +1,6 @@
 ---
 name: testing-and-qa
+sidebarTitle: "Testing & QA"
 description: Design, implement, and execute automated unit tests, integration tests, UI smoke checks, and boundary tests under the Risk-Based Testing (RBT) doctrine. Use when writing test suites, verifying acceptance criteria, or validating quality gates.
 license: MIT
 compatibility: Universal (any OS or programming environment)

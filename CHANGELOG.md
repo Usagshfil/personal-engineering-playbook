@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.1] - 2026-11-03
 
+### Changed
+- **Mintlify Navigation UX & Sidebar Titles**: Configured explicit `sidebarTitle` YAML frontmatter across all 12 Agent Skills (`05-skills/*/SKILL.md`), 8 specialized agent roles (`04-agents/roles/*.md`), and coordination matrices to eliminate duplicate `SKILL` filename entries and provide human-friendly sidebar navigation.
+
 ### Added
 - **Static Documentation Site via Mintlify**:
   - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).

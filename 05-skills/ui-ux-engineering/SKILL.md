@@ -1,5 +1,6 @@
 ---
 name: ui-ux-engineering
+sidebarTitle: "UI/UX Engineering"
 description: Design navigation flows, wireframes, component design systems, 4 UI states (Loading, Empty, Content, Error), responsive layouts, and accessibility (a11y). Use when designing or restructuring user interfaces, screens, or Jetpack Compose UI.
 license: MIT
 compatibility: Universal (any OS or programming environment)

@@ -1,5 +1,6 @@
 ---
 name: debugging
+sidebarTitle: "Debugging"
 description: Analyze errors, inspect crash traces, isolate root causes, formulate hypotheses, write reproducing regression tests, and verify surgical fixes. Use when investigating unexpected runtime bugs, crashes, race conditions, or test failures.
 license: MIT
 compatibility: Universal (any OS or programming environment)

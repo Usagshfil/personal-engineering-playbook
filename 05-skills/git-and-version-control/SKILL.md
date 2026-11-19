@@ -1,5 +1,6 @@
 ---
 name: git-and-version-control
+sidebarTitle: "Git & Version Control"
 description: Manage Git branching strategies (Gitflow and Trunk-Based), Conventional Commits, atomic changesets, pull request descriptions, release tagging, and clean commit history. Use when committing code, preparing branches, or managing version control workflows.
 license: MIT
 compatibility: Universal (any OS or programming environment)

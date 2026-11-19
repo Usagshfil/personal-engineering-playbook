@@ -1,5 +1,6 @@
 ---
 name: system-architecture
+sidebarTitle: "System Architecture"
 description: Design software architecture, component boundaries, layers, modules, unidirectional data flows, and technical decision records (TDRs). Use when establishing or refactoring high-level system structures.
 license: MIT
 compatibility: Universal (any OS or programming environment)

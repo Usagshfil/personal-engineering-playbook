@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Debugging Agent"
+description: "Isolates defect root causes, formulates hypotheses, writes reproducing regression tests, and applies surgical fixes."
+---
+
 # Role Specification: Debugging Agent
 
 > **Level 4 Task-Specific Persona**  

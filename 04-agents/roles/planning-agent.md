@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Planning Agent"
+description: "Decomposes ambiguous feature requests into structured, phased roadmaps and actionable tasks."
+---
+
 # Role Specification: Planning Agent
 
 > **Level 4 Task-Specific Persona**  

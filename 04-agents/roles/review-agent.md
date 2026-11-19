@@ -1,3 +1,8 @@
+---
+sidebarTitle: "Code Review Agent"
+description: "Evaluates pull requests and diffs for architectural integrity, security flaws, and testing adequacy."
+---
+
 # Role Specification: Code Review Agent
 
 > **Level 4 Task-Specific Persona**  

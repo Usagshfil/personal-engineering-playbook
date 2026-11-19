@@ -1,5 +1,6 @@
 ---
 name: requirement-engineering
+sidebarTitle: "Requirement Engineering"
 description: Generate functional and non-functional requirements, user stories, use cases, and verifiable Gherkin acceptance criteria. Use when converting problem statements into formal, unambiguous technical specifications.
 license: MIT
 compatibility: Universal (any OS or programming environment)

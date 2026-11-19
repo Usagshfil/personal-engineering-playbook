@@ -1,5 +1,6 @@
 ---
 name: technical-documentation
+sidebarTitle: "Technical Documentation"
 description: Author and maintain living technical documentation, including Software Requirements Specifications (SRS), Architecture Documents (SAD), API references, READMEs, changelogs, and user manuals. Use when creating or updating project documentation.
 license: MIT
 compatibility: Universal (any OS or programming environment)
