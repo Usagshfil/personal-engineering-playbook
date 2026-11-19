@@ -54,6 +54,18 @@ flowchart TD
 
 ---
 
+## Agile & Scrum Integration
+
+The 12 SDLC phases are not a rigid waterfall process. In modern engineering, they map directly into **Agile Sprint Cycles**:
+* **Sprint 0 / Inception (Phases 01–08)**: High-level discovery, requirements, feasibility, architecture, database schemas, and wireframing.
+* **Iterative Feature Sprints (Phases 09–11)**: Continuous 2-week sprint cycles where vertical user stories traverse implementation, risk-based testing, and automated deployment.
+* **Continuous Maintenance (Phase 12)**: Ongoing defect triage, security updates, and tech debt reduction managed via a 15–20% sprint capacity buffer.
+
+> [!TIP]
+> For detailed ceremony timeboxes, INVEST story criteria, Definition of Ready/Done, and Scrum Master guidance, see the dedicated [Agile Engineering & Scrum Delivery Guide](../docs/guides/AGILE_SCRUM_GUIDE.md).
+
+---
+
 ## Standard Phase Schema
 
 Every stage specification in this directory adheres to a mandatory 5-part structure:

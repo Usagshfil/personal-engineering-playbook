@@ -12,7 +12,7 @@ Modern AI coding agents (such as Google Antigravity, Cursor, Claude Code, and Gi
 This section establishes the **AI Agent Governance System**:
 1. **Canonical Universal Rules (`AGENTS.md`)**: The non-negotiable Level 1 baseline governing all agents.
 2. **The 4-Level Instruction Hierarchy**: The precedence framework that prevents contradictory behavior across tools.
-3. **Specialized Agent Roles (`roles/`)**: Role-specific directives for Planning, Architecture, Coding, Debugging, Testing, Code Review, and Documentation.
+3. **Specialized Agent Roles (`roles/`)**: Role-specific directives for Planning, Scrum Master, Architecture, Coding, Debugging, Testing, Code Review, and Documentation.
 4. **Tool Adapters (`adapters/`)**: Practical configuration templates and honest capability/limitation documentation for Google Antigravity, Cursor, Claude Code, and GitHub Copilot.
 5. **Tool Interoperability Matrix (`adapters/INTEROPERABILITY_MATRIX.md`)**: Empirical breakdown of what each tool natively supports vs. what requires manual developer execution.
 
@@ -44,6 +44,7 @@ $$\text{Project-Specific Rules (Level 3)} \succ \text{Technology-Specific Rules 
 
 ### Specialized Roles (`roles/`)
 *   [planning-agent.md](roles/planning-agent.md): Deconstructs requirements, produces WBS, scopes milestones, creates implementation plans.
+*   [scrum-master-agent.md](roles/scrum-master-agent.md): Facilitates Scrum ceremonies, enforces DoR/DoD, removes delivery blockers, tracks sprint health.
 *   [architecture-agent.md](roles/architecture-agent.md): Selects patterns from the Complexity Fit Matrix, guards against overengineering, drafts SADs/TDRs.
 *   [coding-agent.md](roles/coding-agent.md): Writes clean, idiomatic, immutable code in small vertical slices.
 *   [debugging-agent.md](roles/debugging-agent.md): Root-cause analysis, reproduction, hypothesis testing, regression verification.

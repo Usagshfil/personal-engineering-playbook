@@ -41,8 +41,11 @@ This backlog tracks future ideas, planned technology modules, and candidate skil
   - **F26 (Distributed Deadline Propagation & Cancellation)**: Specified standard headers (`X-Request-Deadline`, `X-Request-Timeout-Ms`), context cancellation mechanics (`AbortSignal`, Coroutine cancellation), and downstream DB query cancellation (`pg_cancel_backend`).
   - **F27 (Transactional Outbox Operational Realities)**: Addressed at-least-once duplicates, consumer inbox deduplication, aggregate partition ordering, poison message handling with DLQ, and automated table cleanup/archival.
   - **F28 (Executable Integration Evidence)**: Explicitly distinguished conceptual architectural walkthroughs from executable integration test harnesses (`representative-api.test.ts` and `verify-postgres-runtime.sh`).
-  - [ ] **Phase 2 & 3**: Runtime verification scripts & GitHub Actions CI upgrades (Node 20 + PostgreSQL 16 service container).
-  - [ ] **Phase 4**: Reusable Project Bootstrap Workflow (`docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md`).
-  - [ ] **Phase 5**: Reusable Project Templates catalog (15 templates in `templates/` + `templates/README.md`).
-  - [ ] **Phase 6**: Real-world project scenario evaluations (`docs/reports/PROJECT_SCENARIOS_EVALUATION.md`).
-  - [ ] **Phase 7**: Root `README.md` Quick Start overhaul and Final Readiness Report (`docs/reports/FINAL_READINESS_REPORT.md`).
+  - [x] **Phase 2 & 3**: Runtime verification scripts & GitHub Actions CI upgrades (Node 20 + PostgreSQL 16 service container).
+  - [x] **Phase 4**: Reusable Project Bootstrap Workflow (`docs/guides/PROJECT_BOOTSTRAP_WORKFLOW.md`).
+  - [x] **Phase 5**: Reusable Project Templates catalog (15 templates in `templates/` + `templates/README.md`).
+  - [x] **Phase 6**: Real-world project scenario evaluations (`docs/reports/PROJECT_SCENARIOS_EVALUATION.md`).
+  - [x] **Phase 7**: Root `README.md` Quick Start overhaul and Final Readiness Report (`docs/reports/FINAL_READINESS_REPORT.md`).
+- [x] **Gitflow Workflow Reference Integration**: Added authoritative [Atlassian Gitflow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) to `05-skills/git-and-version-control/SKILL.md` with CLI commands, branching diagram, and decision matrix.
+- [x] **Agile Engineering & Scrum Delivery Standards**: Created `docs/guides/AGILE_SCRUM_GUIDE.md` covering 2-week sprint cadences, 5 Scrum ceremonies, INVEST story criteria, BDD Given-When-Then acceptance criteria, Definition of Ready/Done, and 12-stage SDLC phase reconciliation.
+- [x] **Scrum Master & Agile Coach Agent Role**: Created `04-agents/roles/scrum-master-agent.md` providing an authoritative persona and operational instructions for sprint facilitation, asynchronous standup synthesis, blocker removal, and DoD enforcement.

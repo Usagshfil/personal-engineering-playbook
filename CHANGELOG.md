@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-rc.1] - 2026-11-03
 
 ### Added
+- **Gitflow Workflow Integration**: Integrated authoritative [Atlassian Gitflow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) into `05-skills/git-and-version-control/SKILL.md` with permanent branches (`main`, `develop`), transient branches (`feature/*`, `release/*`, `hotfix/*`), CLI commands, Mermaid diagram, and mobile vs. web branching decision matrix.
+- **Agile Engineering & Scrum Delivery Guide**: Authored comprehensive universal guide [`docs/guides/AGILE_SCRUM_GUIDE.md`](docs/guides/AGILE_SCRUM_GUIDE.md) detailing the 4 Agile values for AI-assisted engineering, 2-week sprint cadences, 5 Scrum ceremonies with timeboxes, INVEST story criteria, BDD Given-When-Then acceptance criteria, Definition of Ready (DoR) vs. Definition of Done (DoD), and explicit mapping of the 12 SDLC phases into Sprint 0 (inception) and Sprints 1..N (iterative feature delivery).
+- **Scrum Master & Agile Coach Persona**: Added specialized agent role [`04-agents/roles/scrum-master-agent.md`](04-agents/roles/scrum-master-agent.md) for ceremony facilitation, asynchronous standup synthesis, impediment removal, DoD enforcement, and team shielding against mid-sprint scope creep.
 - **Milestone 5.0: Playbook Finalization for Real-World Project Use**:
   - **4-Dimensional Ownership Matrix (F23)**: Formalized Policy Owner, Source of Truth, Enforcement Layer(s), and Validation Responsibilities across Client, API Gateway, Service Layer, and Database Engine.
   - **Token-Family Rotation State Machine (F24)**: Formalized lifecycle transitions (`ISSUED` $\to$ `ACTIVE` $\to$ `CONSUMED` / `REVOKED`) with Mermaid state diagram and deep concurrency analysis contrasting 30s mobile grace periods vs. atomic database advisory locks.

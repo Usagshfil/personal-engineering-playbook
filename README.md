@@ -40,6 +40,7 @@ This playbook is organized around answering five fundamental questions for any s
 ### 1. What Should I Do? (Principles, Lifecycle & Architecture)
 * **Timeless Engineering Principles**: Master Clean Code, Modularity, Performance, and Simplicity in [`01-principles/`](01-principles/README.md). Every principle follows a 9-part pedagogical schema with Good/Bad code examples.
 * **12-Stage Software Development Lifecycle (SDLC)**: Explore strict Phase Gates (Discovery $\to$ Architecture $\to$ Implementation $\to$ QA $\to$ Release $\to$ Maintenance) in [`02-lifecycle/`](02-lifecycle/README.md).
+* **Agile Engineering & Scrum Delivery**: Master iterative 2-week sprint cadences, ceremony timeboxes, INVEST story criteria, Definition of Ready/Done, and SDLC phase reconciliation in [`docs/guides/AGILE_SCRUM_GUIDE.md`](docs/guides/AGILE_SCRUM_GUIDE.md).
 * **Architecture Pattern Fit Matrix**: Select the right architecture (Layered, Clean, Event-Driven, Modular) based on project complexity in [`03-architecture/`](03-architecture/README.md).
 * **Security & Privacy Baseline**: Enforce STRIDE threat modeling, least privilege, zero hardcoded secrets, and PII protection in [`10-security-and-privacy/`](10-security-and-privacy/README.md).
 
@@ -55,9 +56,9 @@ This playbook is organized around answering five fundamental questions for any s
 * **4-Level Instruction Precedence**:
   $$\text{Project Rules (Level 3)} \succ \text{Technology Rules (Level 2)} \succ \text{Universal Rules (Level 1)}$$
   *(The Iron Safety Gate: Universal safety, security, and verification rules can NEVER be overridden).*
-* **Specialized Agent Roles**: Planning, Architecture, Coding, Debugging, Testing, Review, and Documentation personas in [`04-agents/roles/`](04-agents/roles/).
+* **Specialized Agent Roles**: Planning, Scrum Master, Architecture, Coding, Debugging, Testing, Review, and Documentation personas in [`04-agents/roles/`](04-agents/roles/).
 * **Tool-Specific Adapters**: Dedicated adapters for Google Antigravity, Cursor, Claude Code, and GitHub Copilot in [`04-agents/adapters/`](04-agents/adapters/).
-* **12 Reusable Agent Skills**: Standards-compliant skills following the [Agent Skills Specification](https://agentskills.io) in [`05-skills/`](05-skills/README.md).
+* **12 Reusable Agent Skills**: Standards-compliant skills following the [Agent Skills Specification](https://agentskills.io) in [`05-skills/`](05-skills/README.md), including Gitflow & Trunk-Based branching workflows in [`05-skills/git-and-version-control/SKILL.md`](05-skills/git-and-version-control/SKILL.md).
 
 ### 4. How Do I Know It Works? (Testing Doctrine, Validation & Quality Gates)
 * **Risk-Based Testing (RBT)**: Pragmatic verification focused on core domain logic, race conditions, edge cases, and regression proofs in [`02-lifecycle/10-testing.md`](02-lifecycle/10-testing.md) and [`05-skills/testing-and-qa/SKILL.md`](05-skills/testing-and-qa/SKILL.md).
@@ -122,7 +123,7 @@ personal-engineering-playbook/
 ├── IMPROVEMENT_BACKLOG.md              # Roadmap and future technology extensions
 │
 ├── docs/                               # Engineering guides and authoritative reports
-│   ├── guides/                         # PROJECT_BOOTSTRAP_WORKFLOW.md
+│   ├── guides/                         # PROJECT_BOOTSTRAP_WORKFLOW.md, AGILE_SCRUM_GUIDE.md
 │   └── reports/                        # FINALIZATION_BASELINE.md, PROJECT_SCENARIOS_EVALUATION.md, etc.
 │
 ├── templates/                          # 15 Reusable, decoupled project templates + Catalog Index
@@ -134,7 +135,7 @@ personal-engineering-playbook/
 ├── 01-principles/                      # 12 Core Principles with 9-part pedagogical schema
 ├── 02-lifecycle/                       # 12 SDLC Stages (Inputs, Activities, Outputs, Gate Criteria)
 ├── 03-architecture/                    # 11 Architecture Patterns & Complexity Fit Matrix
-├── 04-agents/                          # Universal Agent Rules, 7 Roles & 4 Tool Adapters
+├── 04-agents/                          # Universal Agent Rules, 8 Roles & 4 Tool Adapters
 ├── 05-skills/                          # 12 Reusable AI Skills (agentskills.io compliant)
 ├── 06-technologies/                    # Domain Standards: Android, Web, Backend, Database & Cross-Domain
 ├── 07-templates/                       # Playbook internal documentation templates
