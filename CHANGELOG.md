@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-rc.1] - 2026-11-03
 
 ### Added
+- **Static Documentation Site via Mintlify**:
+  - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).
+  - Authored interactive landing page `index.mdx` with Quick Start steps, card grids, and 5-pillar navigation.
+  - Added `.mintignore` and comprehensive redirect map for directory indices.
+  - Validated MDX syntax, KaTeX formulas, and self-closing tags across all 140+ files; `mint validate` and `mint broken-links --check-redirects` pass with **0 errors**.
 - **Tier 2 Android Mobile Engineering Standards Expansion**:
   - **Offline-First Architecture & Sync Engine (`09-offline-first-and-sync.md`)**: Single Source of Truth (SSOT) via Room, optimistic UI writes, soft-delete tombstones, WorkManager background synchronization with network constraints, exponential backoff, and Last-Write-Wins conflict resolution.
   - **Mobile Testing & Quality Assurance (`10-mobile-testing-and-qa.md`)**: Pragmatic Mobile Testing Pyramid covering pure JVM unit tests (70%), Jetpack Compose UI tests with semantic tags (20%), Roborazzi JVM screenshot regression testing (5%), and Maestro declarative YAML E2E flows (5%).

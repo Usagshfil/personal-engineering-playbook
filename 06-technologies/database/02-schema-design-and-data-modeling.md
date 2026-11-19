@@ -22,7 +22,7 @@ Core modeling invariants include:
     *   **Presentation & Display**: Timezone formatting is a presentation concern; convert UTC instants to the user's localized timezone at the presentation/edge layer.
 *   **Nullable Hygiene**: Columns `MUST` be `NOT NULL` by default. Optionality requires explicit domain justification, preventing confusing 3-valued boolean logic (`TRUE`, `FALSE`, `UNKNOWN/NULL`).
 
-$$\text{Domain Invariant} \xrightarrow[\text{Application Validation}]{\text{Boundary DTO}} \underbrace{\text{Database Engine}}_{\text{ACID Boundary}} \longrightarrow \left[ \begin{array}{l} \text{NOT NULL Constraints} \\ \text{CHECK (total_amount_cents >= 0)} \\ \text{FOREIGN KEY ON DELETE RESTRICT} \\ \text{TIMESTAMPTZ (Instant in UTC)} \\ \text{IANA Timezone for Calendar Events} \end{array} \right]$$
+$$\text{Domain Invariant} \xrightarrow[\text{Application Validation}]{\text{Boundary DTO}} \underbrace{\text{Database Engine}}_{\text{ACID Boundary}} \longrightarrow \left[ \begin{array}{l} \text{NOT NULL Constraints} \\ \text{CHECK (total\_amount\_cents >= 0)} \\ \text{FOREIGN KEY ON DELETE RESTRICT} \\ \text{TIMESTAMPTZ (Instant in UTC)} \\ \text{IANA Timezone for Calendar Events} \end{array} \right]$$
 
 ---
 
@@ -69,7 +69,7 @@ Engineers `MAY` depart from strict 3NF normalization only under these controlled
 
 | Design Choice | Advantages | Disadvantages & Trade-offs |
 | :--- | :--- | :--- |
-| **Strict Constraints (`CHECK`, `FK`)** | Impossible to persist corrupt data; self-documenting schema; zero orphaned rows. | Minor write latency overhead (<2%) during inserts/updates; requires explicit migration sequencing. |
+| **Strict Constraints (`CHECK`, `FK`)** | Impossible to persist corrupt data; self-documenting schema; zero orphaned rows. | Minor write latency overhead (\<2%) during inserts/updates; requires explicit migration sequencing. |
 | **`TIMESTAMPTZ` (UTC Always)** | Eliminates daylight savings bugs, server timezone drift, and international scheduling errors. | Requires explicit timezone conversion when presenting localized dates to end-users. |
 | **`NUMERIC` / Integer Cents** | 100% exact math; passes financial and compliance audits; zero IEEE 754 drift. | Requires slightly more storage (variable bytes) and CPU cycles than hardware-native binary floats. |
 | **`NOT NULL` by Default** | Predictable two-valued boolean logic; eliminates null-pointer exceptions in application code. | Requires explicit default values or careful schema evolution when adding new columns. |

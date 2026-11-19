@@ -1,0 +1,264 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Engineering Playbook",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#10B981",
+    "dark": "#047857"
+  },
+  "redirects": [
+    { "source": "/01-principles/README", "destination": "/01-principles/01-clean-code" },
+    { "source": "/01-principles/README.md", "destination": "/01-principles/01-clean-code" },
+    { "source": "/02-lifecycle/README", "destination": "/02-lifecycle/01-project-discovery" },
+    { "source": "/02-lifecycle/README.md", "destination": "/02-lifecycle/01-project-discovery" },
+    { "source": "/03-architecture/README", "destination": "/03-architecture/01-layered-architecture" },
+    { "source": "/03-architecture/README.md", "destination": "/03-architecture/01-layered-architecture" },
+    { "source": "/04-agents/README", "destination": "/04-agents/roles/planning-agent" },
+    { "source": "/04-agents/README.md", "destination": "/04-agents/roles/planning-agent" },
+    { "source": "/05-skills/README", "destination": "/05-skills/project-planning/SKILL" },
+    { "source": "/05-skills/README.md", "destination": "/05-skills/project-planning/SKILL" },
+    { "source": "/06-technologies/README", "destination": "/06-technologies/CROSS_DOMAIN_CONSISTENCY" },
+    { "source": "/06-technologies/README.md", "destination": "/06-technologies/CROSS_DOMAIN_CONSISTENCY" },
+    { "source": "/06-technologies/android/README", "destination": "/06-technologies/android/01-kotlin-idioms" },
+    { "source": "/06-technologies/android/README.md", "destination": "/06-technologies/android/01-kotlin-idioms" },
+    { "source": "/06-technologies/web/README", "destination": "/06-technologies/web/01-typescript-idioms" },
+    { "source": "/06-technologies/web/README.md", "destination": "/06-technologies/web/01-typescript-idioms" },
+    { "source": "/06-technologies/backend/README", "destination": "/06-technologies/backend/01-rest-api-design" },
+    { "source": "/06-technologies/backend/README.md", "destination": "/06-technologies/backend/01-rest-api-design" },
+    { "source": "/06-technologies/database/README", "destination": "/06-technologies/database/01-database-governance-and-technology-selection" },
+    { "source": "/06-technologies/database/README.md", "destination": "/06-technologies/database/01-database-governance-and-technology-selection" },
+    { "source": "/10-security-and-privacy/README", "destination": "/10-security-and-privacy/01-credential-and-secret-management" },
+    { "source": "/10-security-and-privacy/README.md", "destination": "/10-security-and-privacy/01-credential-and-secret-management" },
+    { "source": "/templates/README", "destination": "/templates/01-PROJECT_BRIEF_TEMPLATE" },
+    { "source": "/templates/README.md", "destination": "/templates/01-PROJECT_BRIEF_TEMPLATE" }
+  ],
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "AGENTS"
+            ]
+          },
+          {
+            "group": "Delivery Workflows",
+            "pages": [
+              "docs/guides/PROJECT_BOOTSTRAP_WORKFLOW",
+              "docs/guides/AGILE_SCRUM_GUIDE"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Universal Core",
+        "groups": [
+          {
+            "group": "Principles (01-principles)",
+            "pages": [
+              "01-principles/01-clean-code",
+              "01-principles/02-naming-conventions",
+              "01-principles/03-coding-style",
+              "01-principles/04-code-organization",
+              "01-principles/05-function-and-class-design",
+              "01-principles/06-error-handling",
+              "01-principles/07-logging",
+              "01-principles/08-comments-and-documentation",
+              "01-principles/09-configuration-management",
+              "01-principles/10-dependency-management",
+              "01-principles/11-code-reusability",
+              "01-principles/12-technical-debt-management"
+            ]
+          },
+          {
+            "group": "12-Stage SDLC (02-lifecycle)",
+            "pages": [
+              "02-lifecycle/01-project-discovery",
+              "02-lifecycle/02-problem-analysis",
+              "02-lifecycle/03-requirement-gathering",
+              "02-lifecycle/04-feasibility-analysis",
+              "02-lifecycle/05-project-planning",
+              "02-lifecycle/06-system-architecture",
+              "02-lifecycle/07-database-design",
+              "02-lifecycle/08-ui-ux-design",
+              "02-lifecycle/09-implementation",
+              "02-lifecycle/10-testing",
+              "02-lifecycle/11-deployment",
+              "02-lifecycle/12-maintenance"
+            ]
+          },
+          {
+            "group": "Architecture Patterns (03-architecture)",
+            "pages": [
+              "03-architecture/01-layered-architecture",
+              "03-architecture/02-clean-architecture",
+              "03-architecture/03-mvc-pattern",
+              "03-architecture/04-mvvm-pattern",
+              "03-architecture/05-repository-pattern",
+              "03-architecture/06-dependency-injection",
+              "03-architecture/07-modular-architecture",
+              "03-architecture/08-ui-business-logic-separation",
+              "03-architecture/09-state-management",
+              "03-architecture/10-api-communication",
+              "03-architecture/11-database-integration"
+            ]
+          },
+          {
+            "group": "Security & Privacy (10-security-and-privacy)",
+            "pages": [
+              "10-security-and-privacy/01-credential-and-secret-management",
+              "10-security-and-privacy/02-authentication-and-authorization",
+              "10-security-and-privacy/03-input-validation-and-sanitization",
+              "10-security-and-privacy/04-dependency-security-and-supply-chain",
+              "10-security-and-privacy/05-data-privacy-and-gdpr-principles",
+              "10-security-and-privacy/06-secure-logging-and-telemetry",
+              "10-security-and-privacy/07-threat-modeling-stride",
+              "10-security-and-privacy/08-secure-configuration",
+              "10-security-and-privacy/09-api-and-database-security"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Technology Standards",
+        "groups": [
+          {
+            "group": "Cross-Domain Harmonization",
+            "pages": [
+              "06-technologies/CROSS_DOMAIN_CONSISTENCY"
+            ]
+          },
+          {
+            "group": "Android Standards",
+            "pages": [
+              "06-technologies/android/01-kotlin-idioms",
+              "06-technologies/android/02-jetpack-compose",
+              "06-technologies/android/03-coroutines-and-flow",
+              "06-technologies/android/04-room-database",
+              "06-technologies/android/05-dependency-injection",
+              "06-technologies/android/06-network-and-api",
+              "06-technologies/android/07-architecture-patterns",
+              "06-technologies/android/08-gradle-and-build",
+              "06-technologies/android/09-offline-first-and-sync",
+              "06-technologies/android/10-mobile-testing-and-qa",
+              "06-technologies/android/11-release-management-and-cicd"
+            ]
+          },
+          {
+            "group": "Web Frontend Standards",
+            "pages": [
+              "06-technologies/web/01-typescript-idioms",
+              "06-technologies/web/02-react-architecture",
+              "06-technologies/web/03-state-management",
+              "06-technologies/web/04-modern-styling-and-css",
+              "06-technologies/web/05-web-performance-and-cwv",
+              "06-technologies/web/06-accessibility-and-forms"
+            ]
+          },
+          {
+            "group": "Backend & API Standards",
+            "pages": [
+              "06-technologies/backend/01-rest-api-design",
+              "06-technologies/backend/02-data-validation-and-serialization",
+              "06-technologies/backend/03-authentication-and-authorization",
+              "06-technologies/backend/04-service-layer-and-domain-logic",
+              "06-technologies/backend/05-resilience-and-fault-tolerance",
+              "06-technologies/backend/06-observability-and-logging"
+            ]
+          },
+          {
+            "group": "Database & Persistence Standards",
+            "pages": [
+              "06-technologies/database/01-database-governance-and-technology-selection",
+              "06-technologies/database/02-schema-design-and-data-modeling",
+              "06-technologies/database/03-indexing-strategies-and-query-tuning",
+              "06-technologies/database/04-safe-schema-migrations",
+              "06-technologies/database/05-transactions-and-concurrency",
+              "06-technologies/database/06-connection-pooling-and-resilience",
+              "06-technologies/database/07-data-security-backup-and-recovery"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "AI Agents & Skills",
+        "groups": [
+          {
+            "group": "Specialized Roles",
+            "pages": [
+              "04-agents/roles/planning-agent",
+              "04-agents/roles/scrum-master-agent",
+              "04-agents/roles/architecture-agent",
+              "04-agents/roles/coding-agent",
+              "04-agents/roles/debugging-agent",
+              "04-agents/roles/testing-agent",
+              "04-agents/roles/review-agent",
+              "04-agents/roles/documentation-agent"
+            ]
+          },
+          {
+            "group": "Tool Interoperability",
+            "pages": [
+              "04-agents/adapters/INTEROPERABILITY_MATRIX"
+            ]
+          },
+          {
+            "group": "Agent Skills (05-skills)",
+            "pages": [
+              "05-skills/INTEGRATION_SCENARIOS",
+              "05-skills/project-planning/SKILL",
+              "05-skills/requirement-engineering/SKILL",
+              "05-skills/system-architecture/SKILL",
+              "05-skills/database-engineering/SKILL",
+              "05-skills/ui-ux-engineering/SKILL",
+              "05-skills/coding-and-implementation/SKILL",
+              "05-skills/git-and-version-control/SKILL",
+              "05-skills/testing-and-qa/SKILL",
+              "05-skills/code-review/SKILL",
+              "05-skills/debugging/SKILL",
+              "05-skills/deployment-and-release/SKILL",
+              "05-skills/technical-documentation/SKILL"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Templates & Reports",
+        "groups": [
+          {
+            "group": "Project Templates",
+            "pages": [
+              "templates/01-PROJECT_BRIEF_TEMPLATE",
+              "templates/02-REQUIREMENTS_SPEC_TEMPLATE",
+              "templates/03-TECHNICAL_DESIGN_TEMPLATE",
+              "templates/04-ADR_TEMPLATE",
+              "templates/05-API_SPECIFICATION_TEMPLATE",
+              "templates/06-DATABASE_DESIGN_TEMPLATE",
+              "templates/07-IMPLEMENTATION_PLAN_TEMPLATE",
+              "templates/08-TASK_DEFINITION_TEMPLATE",
+              "templates/09-TEST_PLAN_TEMPLATE",
+              "templates/10-TEST_REPORT_TEMPLATE",
+              "templates/11-CODE_REVIEW_TEMPLATE",
+              "templates/12-SECURITY_REVIEW_TEMPLATE",
+              "templates/13-RELEASE_CHECKLIST_TEMPLATE",
+              "templates/14-INCIDENT_REPORT_TEMPLATE",
+              "templates/15-RETROSPECTIVE_TEMPLATE"
+            ]
+          },
+          {
+            "group": "Authoritative Reports",
+            "pages": [
+              "docs/reports/FINALIZATION_BASELINE",
+              "docs/reports/FINAL_READINESS_REPORT",
+              "docs/reports/PROJECT_SCENARIOS_EVALUATION"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

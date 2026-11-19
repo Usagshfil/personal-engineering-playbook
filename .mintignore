@@ -1,0 +1,9 @@
+06-technologies/**/examples/
+tools/
+.github/
+.agent/
+*.ps1
+*.sh
+*.sql
+*.ts
+*.tsx

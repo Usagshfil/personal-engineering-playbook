@@ -109,8 +109,8 @@ CREATE INDEX idx_orders_org_status_created ON orders (
 
 | Phase | DDL / DML Operation | Lock Timeout | Application Compatibility |
 | :---: | :--- | :---: | :--- |
-| **Phase 1 (Expand)** | `ALTER TABLE ... ADD COLUMN ...` as nullable.<br>`ADD CONSTRAINT ... NOT VALID;` | `2s` | Version N and N+1 both function normally. |
-| **Phase 2 (Validate)**| `ALTER TABLE ... VALIDATE CONSTRAINT ...;`<br>`CREATE INDEX CONCURRENTLY ...;` | None (weak lock) | Backfill historical records in throttled batches. |
+| **Phase 1 (Expand)** | `ALTER TABLE ... ADD COLUMN ...` as nullable.<br />`ADD CONSTRAINT ... NOT VALID;` | `2s` | Version N and N+1 both function normally. |
+| **Phase 2 (Validate)**| `ALTER TABLE ... VALIDATE CONSTRAINT ...;`<br />`CREATE INDEX CONCURRENTLY ...;` | None (weak lock) | Backfill historical records in throttled batches. |
 | **Phase 3 (Contract)**| Set default; enforce `NOT NULL` via validated check; drop deprecated columns. | `2s` | Executed only after Version N+1 is 100% deployed. |
 
 ---

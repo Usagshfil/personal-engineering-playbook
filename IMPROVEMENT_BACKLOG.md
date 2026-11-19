@@ -18,6 +18,7 @@ This backlog tracks future ideas, planned technology modules, and candidate skil
 
 ## 🛠️ Tooling & Framework Enhancements
 
+- [x] **Static Documentation Site (Mintlify)**: Configured full Mintlify static documentation site (`docs.json`, `index.mdx`, `.mintignore`) with 5 tabs, responsive search, KaTeX math rendering, and automated broken-link checking (`mint validate` and `mint broken-links` passing with 0 errors).
 - [ ] **Interactive CLI Scaffolder**: Advanced Node.js or Go binary alternative to the PowerShell script for multi-platform developer machines.
 - [x] **Automated Rule Linter**: GitHub Actions workflow (`.github/workflows/validate-playbook.yml`) verifying link integrity, absolute path hygiene, and `agentskills.io` JSON schema compliance across Ubuntu and Windows runners.
 - [ ] **Obsidian / Logseq Knowledge Graph Config**: Optional `.obsidian` graph configuration for visualizing interconnected software engineering concepts.

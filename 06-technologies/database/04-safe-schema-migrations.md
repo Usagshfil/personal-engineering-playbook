@@ -22,11 +22,11 @@ Core migration principles include:
     *   **Application Rollback**: Re-deploying version $N$ containers if version $N+1$ fails health checks.
     *   **Data Recovery**: Restoring discarded or transformed data. Once the *Contract Phase* drops an old column, a simple SQL rollback *cannot* recover data written exclusively to the new column during the deployment window. Destructive contract phases must be delayed until version $N+1$ is fully baked and verified.
 
-$$\begin{array}{rcccl}
-\text{Phase 1 (Expand)} & : & \text{Add new column/table nullable or with default} & \longrightarrow & \text{Both App } N \text{ and } N+1 \text{ compatible} \\
-\text{Phase 2 (Dual-Write)} & : & \text{App } N+1 \text{ writes both old and new formats} & \longrightarrow & \text{Resumable backfill in throttled chunks} \\
-\text{Phase 3 (Contract)} & : & \text{App reads new format exclusively} & \longrightarrow & \text{Drop old column only after bake period}
-\end{array}$$
+```text
+Phase 1 (Expand)     : Add new column/table nullable or with default  ---> Both App N and N+1 compatible
+Phase 2 (Dual-Write) : App N+1 writes both old and new formats        ---> Resumable backfill in throttled chunks
+Phase 3 (Contract)   : App reads new format exclusively               ---> Drop old column only after bake period
+```
 
 ---
 

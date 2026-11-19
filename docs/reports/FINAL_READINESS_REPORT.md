@@ -22,7 +22,7 @@ In accordance with Tier 1 Universal Engineering Standard Rule 4 (Verification In
   2. All 15 decoupled, production-ready project templates are published in `templates/` with an overarching selector matrix.
   3. The 6 architectural and governance findings (**F23–F28**) are resolved with formal state machines, 4-dimensional ownership matrices, and de-dogmatized domain rounding rules in `06-technologies/CROSS_DOMAIN_CONSISTENCY.md`.
   4. All local test harnesses (`validate-playbook.ps1`, `test-validator-positive.ps1`, `test-validator-negative.ps1`, `test-backend-example.ps1`, `test-database-example.ps1`, `test-clean-clone.ps1`) pass with **zero errors**.
-  5. The GitHub Actions CI workflow ([`.github/workflows/validate-playbook.yml`](../../.github/workflows/validate-playbook.yml)) is upgraded with Node 20 LTS, automated secret scanning, and a live containerized PostgreSQL 16 service.
+  5. The GitHub Actions CI workflow (`.github/workflows/validate-playbook.yml`) is upgraded with Node 20 LTS, automated secret scanning, and a live containerized PostgreSQL 16 service.
 * **Limitations Documented**:
   * The local Windows host workstation currently lacks `node`, `npm`, `docker`, and `psql` in system PATH (`PowerShell 5.1` native only). Therefore, live TypeScript compilation (`tsc`), `vitest` unit tests, and live PostgreSQL socket execution are configured to execute in the containerized GitHub Actions CI environment, while local verification on Windows is performed through contract and AST pattern verifiers (`tools/test-backend-example.ps1`, `tools/test-database-example.ps1`). Full local compilation requires running `winget install OpenJS.NodeJS.LTS` on the developer machine.
 

@@ -66,7 +66,7 @@ The purpose of this standard is to ensure web applications load instantly, respo
 ## 5. When NOT to Use It (Anti-Complexity Limits)
 
 *   **Lazy-Loading Hero Images**: **NEVER** set `loading="lazy"` on above-the-fold hero images or primary banner graphics. Lazy-loading the hero image delays LCP by up to 1–2 seconds.
-*   **Over-Splitting Tiny Components**: Do NOT dynamically import small components (<10KB). The overhead of additional HTTP requests and bundle metadata outweighs the negligible bundle savings.
+*   **Over-Splitting Tiny Components**: Do NOT dynamically import small components (\<10KB). The overhead of additional HTTP requests and bundle metadata outweighs the negligible bundle savings.
 *   **Micro-Optimizing Trivial Renders**: Do not wrap every callback in `useCallback` or every object in `useMemo`. Focus on expensive computations (>1000 items) or components with deep child subtrees.
 *   **Blocking Fonts via Render-Blocking CSS**: Never import Google Fonts via `@import url(...)` inside CSS files. Use modern font loaders with preloading.
 

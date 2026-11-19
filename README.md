@@ -17,6 +17,9 @@ Starting a new project? Follow these 3 simple steps:
 3. **Select Your Project Templates**:
    Visit the [`templates/`](templates/README.md) catalog to copy production-ready templates for your Project Brief, Architecture Design, API Specs, and Test Plans.
 
+> [!TIP]
+> **Interactive Documentation Site**: You can browse the entire playbook locally with full-text search, dark/light themes, and interactive components by running `mint dev` (hosted on [Mintlify](https://mintlify.com)).
+
 ---
 
 ## 🧭 The 5 Core Engineering Questions Answered

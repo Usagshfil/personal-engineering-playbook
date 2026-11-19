@@ -355,10 +355,7 @@ In production systems, mobile clients frequently fire concurrent HTTP requests (
 ### The End-to-End Deadline Hierarchy
 In a multi-tier architecture, every layer must enforce a strictly shorter timeout than its caller. If the mobile app times out after 3 seconds, a backend database query configured for 30 seconds will continue executing uselessly for 27 seconds, wasting CPU and memory on an abandoned client.
 
-$$\begin{array}{cccccc}
-\mathbf{Mobile\ /\ Web\ Client} & > & \mathbf{Backend\ Ingress} & > & \mathbf{Database\ Statement} & > & \mathbf{Downstream\ HTTP} \\
-\mathbf{5.0s\ Total\ Budget} & & \mathbf{4.0s\ Request\ Deadline} & & \mathbf{2.0s\ statement\_timeout} & & \mathbf{1.5s\ Outbound\ Call}
-\end{array}$$
+$$\text{Client (5.0s Total)} > \text{Ingress (4.0s Deadline)} > \text{DB Statement (2.0s)} > \text{Outbound HTTP (1.5s)}$$
 
 ### 6.1 Distributed Deadline Propagation & Cancellation Mechanics
 
@@ -547,9 +544,9 @@ flowchart TD
 In strict accordance with Tier 1 Universal Engineering Standard Rule 4 (Verification Integrity):
 * **The Architectural Walkthrough (above)**: Serves as the normative conceptual specification and structural sequence contract. It illustrates how client, gateway, backend controller, service layer, database, and background workers must interact.
 * **The Executable Integration Test Harnesses (Reference Implementations)**:
-  1. *Backend API & Domain Logic*: The API boundary parsing, BOLA ownership validation, idempotency caching, Unit of Work transaction boundaries, and RFC 9457 error mappings are concretely implemented in [`06-technologies/backend/examples/representative-api.ts`](backend/examples/representative-api.ts) and empirically verified by [`06-technologies/backend/examples/representative-api.test.ts`](backend/examples/representative-api.test.ts).
-  2. *Relational Database & Concurrency*: The PostgreSQL 16+ schemas, constraints, OCC version columns, pessimistic locks, outbox tables, and audit ledger are concretely implemented in [`06-technologies/database/examples/representative-schema-and-migration.sql`](database/examples/representative-schema-and-migration.sql) and verified in CI via [`06-technologies/database/examples/verify-postgres-runtime.sh`](database/examples/verify-postgres-runtime.sh).
-  3. *Workstation Offline Verifiers*: Workstations without Docker/Node.js execute contract and structural checks via [`tools/test-backend-example.ps1`](../tools/test-backend-example.ps1) and [`tools/test-database-example.ps1`](../tools/test-database-example.ps1).
+  1. *Backend API & Domain Logic*: The API boundary parsing, BOLA ownership validation, idempotency caching, Unit of Work transaction boundaries, and RFC 9457 error mappings are concretely implemented in `06-technologies/backend/examples/representative-api.ts` and empirically verified by `06-technologies/backend/examples/representative-api.test.ts`.
+  2. *Relational Database & Concurrency*: The PostgreSQL 16+ schemas, constraints, OCC version columns, pessimistic locks, outbox tables, and audit ledger are concretely implemented in `06-technologies/database/examples/representative-schema-and-migration.sql` and verified in CI via `06-technologies/database/examples/verify-postgres-runtime.sh`.
+  3. *Workstation Offline Verifiers*: Workstations without Docker/Node.js execute contract and structural checks via `tools/test-backend-example.ps1` and `tools/test-database-example.ps1`.
 
 ---
 

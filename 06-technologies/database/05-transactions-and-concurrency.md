@@ -37,7 +37,7 @@ The purpose of these standards is to:
 ## 3. Why It Matters
 
 Without strict concurrency controls, concurrent requests produce catastrophic financial anomalies:
-*   **The Lost Update Disaster**: Two concurrent transactions read Account Balance $= \$100$. Transaction A debits $\$30$ (new balance $\$70$). Transaction B simultaneously debits $\$40$ (new balance $\$60$). Transaction B commits last, overwriting Transaction A's debit. The bank has lost $\$30$ and the customer account state is corrupted.
+*   **The Lost Update Disaster**: Two concurrent transactions read Account Balance = \$100. Transaction A debits \$30 (new balance \$70). Transaction B simultaneously debits \$40 (new balance \$60). Transaction B commits last, overwriting Transaction A's debit. The bank has lost \$30 and the customer account state is corrupted.
 *   **The Write Skew Trap in Booking Systems**: Two doctors on call both request taking the evening off. The rule requires at least one doctor on duty. Under Read Committed or Repeatable Read, both doctors concurrently see the other on duty and both requests commit, leaving zero doctors on duty. Only **Serializable Isolation** or explicit row locking detects this write skew.
 *   **Deadlock Cascades**: Transaction 1 updates Account A, then attempts to update Account B. Transaction 2 updates Account B, then attempts to update Account A. Both transactions block each other permanently until the database terminates one with a deadlock abort exception.
 *   **Long-Running Transaction Connection Leaks**: Keeping an active database transaction open while waiting for an external HTTP API call (e.g. Stripe) ties up connection pool handles for seconds, causing pool exhaustion.
