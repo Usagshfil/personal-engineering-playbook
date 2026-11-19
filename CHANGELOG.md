@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mintlify Navigation UX & Sidebar Titles**: Configured explicit `sidebarTitle` YAML frontmatter across all 12 Agent Skills (`05-skills/*/SKILL.md`), 8 specialized agent roles (`04-agents/roles/*.md`), and coordination matrices to eliminate duplicate `SKILL` filename entries and provide human-friendly sidebar navigation.
 
 ### Added
+- **Interactive Project Scaffolder CLI (`tools/scaffold-project.ps1`)**:
+  - Implemented interactive colored wizard and non-interactive scripted project generator supporting 4 architectural profiles: **Android Mobile Client** (Compose, Room SSOT, WorkManager, Version Catalogs, Fastlane), **Modern Web Frontend** (React 19, TypeScript, Tailwind), **Backend API** (Clean Architecture/DDD, PostgreSQL 16 migrations, Outbox pattern), and **Distributed Full-Stack** (cross-domain harmonization).
+  - Automatically injects immutable Level 1 Core (`AGENTS.md`), generates customized Level 3 Project Overlay (`.agent/PROJECT.md`), and configures tool-specific adapters (`.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`).
+  - Pre-populates operational progress tracking (`PROJECT_PROGRESS.md`), core planning templates (`PROJECT_BRIEF.md`, `REQUIREMENTS_SPEC.md`, `TECHNICAL_DESIGN.md`, `0001-initial-architecture.md`), CI/CD quality gate workflows, and strict secret defense in `.gitignore`.
+  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying all 4 profiles and secret protection with **46/46 passing assertions**.
 - **Static Documentation Site via Mintlify**:
   - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).
   - Authored interactive landing page `index.mdx` with Quick Start steps, card grids, and 5-pillar navigation.

@@ -10,6 +10,17 @@
 
 This guide defines the complete end-to-end lifecycle for spinning up a new software project from scratch using the Personal Software Engineering Playbook. 
 
+> [!TIP]
+> **One-Command Automated Scaffolder**:
+> Instead of manually copying directories and creating configuration files, you can scaffold a fully configured project repository (including `AGENTS.md`, `.agent/PROJECT.md`, multi-agent rules, Clean Architecture directories, CI workflows, and project tracking) in seconds using the interactive CLI utility:
+> ```powershell
+> # Interactive Scaffolder Wizard
+> powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1
+> 
+> # Direct Automated Command (Example: Android Mobile)
+> powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1 -ProjectName "ZenithMobile" -Profile "android" -TargetDir "./zenith-mobile"
+> ```
+
 Too many projects fail before writing code due to architectural churn, or fail during delivery due to missing gates, unverified AI code, or configuration drift. This workflow establishes a predictable, disciplined, and repeatable **8-Stage Path to Production**:
 
 ```

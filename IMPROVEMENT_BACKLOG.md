@@ -19,7 +19,7 @@ This backlog tracks future ideas, planned technology modules, and candidate skil
 ## 🛠️ Tooling & Framework Enhancements
 
 - [x] **Static Documentation Site (Mintlify)**: Configured full Mintlify static documentation site (`docs.json`, `index.mdx`, `.mintignore`) with 5 tabs, responsive search, KaTeX math rendering, and automated broken-link checking (`mint validate` and `mint broken-links` passing with 0 errors).
-- [ ] **Interactive CLI Scaffolder**: Advanced Node.js or Go binary alternative to the PowerShell script for multi-platform developer machines.
+- [x] **Interactive CLI Project Scaffolder**: Implemented `tools/scaffold-project.ps1` with interactive and scripted modes supporting 4 architectural profiles (Android Mobile Client with Compose/Room/WorkManager/Fastlane, Modern Web Frontend, Backend API, and Distributed Full-Stack), complete AI agent governance (`AGENTS.md`, `.agent/PROJECT.md`, `.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`), Clean Architecture directory layouts, CI/CD quality gates, and automated test suite (`tools/test-scaffolder.ps1` passing 46/46 assertions).
 - [x] **Automated Rule Linter**: GitHub Actions workflow (`.github/workflows/validate-playbook.yml`) verifying link integrity, absolute path hygiene, and `agentskills.io` JSON schema compliance across Ubuntu and Windows runners.
 - [ ] **Obsidian / Logseq Knowledge Graph Config**: Optional `.obsidian` graph configuration for visualizing interconnected software engineering concepts.
 - [x] **Backend Reference API Verifier**: Automated verifier (`tools/test-backend-example.ps1`) executing clean-clone contract, schema, idempotency, and test coverage validation.
