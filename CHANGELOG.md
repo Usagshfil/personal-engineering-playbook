@@ -22,7 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `-IncludeCodeRabbit`: Generates pre-tuned `.coderabbit.yaml` enforcing Level 1 safety rules, Compose test tags, and Room persistence gates on GitHub PRs.
     - `-IncludeMcp`: Generates `.cursor/mcp.json` and `.claude/mcp.json` configured for Figma MCP, GitHub MCP, and PostgreSQL MCP servers, plus `FIGMA_TO_COMPOSE.md` and `TOOLING_AND_MCP_GUIDE.md`.
     - `-IncludeMintlify`: Generates complete static documentation site (`docs.json`, `index.mdx`).
-  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying lean zero-bloat scaffolding, all optional modules, and all 4 profiles with **61/61 passing assertions**.
+    - `-BaaS [none|supabase|firebase|both]`: Generates modular Backend-as-a-Service architecture:
+      - **Supabase**: PostgreSQL 16+ initial schema with `uuid-ossp`, `pgcrypto`, atomic 5-minute slot hold procedure (`hold_court_slot` with `SELECT ... FOR UPDATE`), Row-Level Security (RLS) policies, `supabase/config.toml`, `.env.example`, and Android Kotlin integration guide (`SUPABASE_INTEGRATION.md`).
+      - **Firebase**: Generates `firebase.json`, `firestore.rules` (auth and ownership checks), `firestore.indexes.json`, `google-services.json` secret defense, and Android integration guide (`FIREBASE_INTEGRATION.md`).
+      - **Both (Hybrid)**: Injects Supabase relational data SSOT + Firebase FCM Push Notification support.
+  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying lean zero-bloat scaffolding, all optional modules, all 4 profiles, and all BaaS configurations with **83/83 passing assertions**.
 - **Static Documentation Site via Mintlify**:
   - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).
   - Authored interactive landing page `index.mdx` with Quick Start steps, card grids, and 5-pillar navigation.

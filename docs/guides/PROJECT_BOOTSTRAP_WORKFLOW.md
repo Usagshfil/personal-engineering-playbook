@@ -17,11 +17,12 @@ This guide defines the complete end-to-end lifecycle for spinning up a new softw
 > # Interactive Scaffolder Wizard (prompts for optional tools)
 > powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1
 > 
-> # Direct Automated Command with Optional Tooling (CodeRabbit, Figma/MCP, Skills & Vibe Coding Playbook)
+> # Direct Automated Command with Optional Tooling (CodeRabbit, Figma/MCP, BaaS, Skills & Vibe Coding Playbook)
 > powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1 `
 >     -ProjectName "ZenithMobile" `
 >     -Profile "android" `
 >     -TargetDir "./zenith-mobile" `
+>     -BaaS "supabase" `
 >     -IncludeAgentDocs `
 >     -IncludeCodeRabbit `
 >     -IncludeMcp

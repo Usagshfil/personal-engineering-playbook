@@ -38,7 +38,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 1: Lean Android Mobile Profile (Default - Zero Bloat)
     # -------------------------------------------------------------
-    Write-Host "[1/6] Testing Lean Android Mobile Profile (Zero Bloat)..." -ForegroundColor Yellow
+    Write-Host "[1/9] Testing Lean Android Mobile Profile (Zero Bloat)..." -ForegroundColor Yellow
     $LeanTarget = Join-Path $TempBase "lean-android-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -65,11 +65,13 @@ try {
     Assert-Test "Lean: No .cursor/mcp.json" (-not (Test-Path (Join-Path $LeanTarget ".cursor/mcp.json"))) "Unexpected .cursor/mcp.json in lean mode"
     Assert-Test "Lean: No .agent/skills" (-not (Test-Path (Join-Path $LeanTarget ".agent/skills"))) "Unexpected .agent/skills in lean mode"
     Assert-Test "Lean: No docs.json" (-not (Test-Path (Join-Path $LeanTarget "docs.json"))) "Unexpected docs.json in lean mode"
+    Assert-Test "Lean: No supabase directory" (-not (Test-Path (Join-Path $LeanTarget "supabase"))) "Unexpected supabase directory in lean mode"
+    Assert-Test "Lean: No firebase.json" (-not (Test-Path (Join-Path $LeanTarget "firebase.json"))) "Unexpected firebase.json in lean mode"
 
     # -------------------------------------------------------------
     # TEST CASE 2: Fully-Loaded Android Profile with Modular Tooling
     # -------------------------------------------------------------
-    Write-Host "`n[2/6] Testing Fully-Loaded Android Profile with Modular Tooling..." -ForegroundColor Yellow
+    Write-Host "`n[2/9] Testing Fully-Loaded Android Profile with Modular Tooling..." -ForegroundColor Yellow
     $FullAndroidTarget = Join-Path $TempBase "full-android-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -148,7 +150,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 3: Modern Web Frontend Profile
     # -------------------------------------------------------------
-    Write-Host "`n[3/6] Testing Profile B: Modern Web Frontend..." -ForegroundColor Yellow
+    Write-Host "`n[3/9] Testing Profile B: Modern Web Frontend..." -ForegroundColor Yellow
     $WebTarget = Join-Path $TempBase "test-web-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -167,7 +169,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 4: Backend API Profile
     # -------------------------------------------------------------
-    Write-Host "`n[4/6] Testing Profile C: Backend API & Services..." -ForegroundColor Yellow
+    Write-Host "`n[4/9] Testing Profile C: Backend API & Services..." -ForegroundColor Yellow
     $BackendTarget = Join-Path $TempBase "test-backend-api"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -187,7 +189,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 5: Distributed Full-Stack Profile
     # -------------------------------------------------------------
-    Write-Host "`n[5/6] Testing Profile D: Distributed Full-Stack..." -ForegroundColor Yellow
+    Write-Host "`n[5/9] Testing Profile D: Distributed Full-Stack..." -ForegroundColor Yellow
     $FullStackTarget = Join-Path $TempBase "test-fullstack-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -206,7 +208,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 6: Safety Guard (Non-Empty Directory Overwrite Rejection)
     # -------------------------------------------------------------
-    Write-Host "`n[6/6] Testing Safety Guard (Non-Empty Directory Overwrite)..." -ForegroundColor Yellow
+    Write-Host "`n[6/9] Testing Safety Guard (Non-Empty Directory Overwrite)..." -ForegroundColor Yellow
     $SafetyFailedAsExpected = $false
     try {
         & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -218,6 +220,86 @@ try {
         $SafetyFailedAsExpected = $true
     }
     Assert-Test "Non-empty directory overwrite prevented without -Force" $true "Safety guard should prevent silent overwrite"
+
+    # -------------------------------------------------------------
+    # TEST CASE 7: BaaS Supabase Scaffolding (-BaaS supabase)
+    # -------------------------------------------------------------
+    Write-Host "`n[7/9] Testing BaaS: Supabase Scaffolding..." -ForegroundColor Yellow
+    $SupabaseTarget = Join-Path $TempBase "test-supabase-app"
+    
+    & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
+        -ProjectName "TestSupabaseApp" `
+        -Profile "android" `
+        -TargetDir $SupabaseTarget `
+        -BaaS "supabase" `
+        -NonInteractive
+
+    Assert-Test "Supabase: Target Dir Created" (Test-Path $SupabaseTarget) "Dir not found"
+    $SupabaseMigrationPath = Join-Path $SupabaseTarget "supabase/migrations/0001_initial_schema.sql"
+    Assert-Test "Supabase: Migration exists" (Test-Path $SupabaseMigrationPath) "Migration missing"
+    if (Test-Path $SupabaseMigrationPath) {
+        $MigrationContent = Get-Content -Path $SupabaseMigrationPath -Raw
+        Assert-Test "Supabase: Migration contains hold_court_slot" ($MigrationContent -match "hold_court_slot") "Procedure missing"
+        Assert-Test "Supabase: Migration contains RLS" ($MigrationContent -match "ENABLE ROW LEVEL SECURITY") "RLS missing"
+    }
+    Assert-Test "Supabase: config.toml exists" (Test-Path (Join-Path $SupabaseTarget "supabase/config.toml")) "config.toml missing"
+    Assert-Test "Supabase: Android Integration Guide exists" (Test-Path (Join-Path $SupabaseTarget "docs/standards/android/SUPABASE_INTEGRATION.md")) "Guide missing"
+    
+    $SupabaseEnvPath = Join-Path $SupabaseTarget ".env.example"
+    if (Test-Path $SupabaseEnvPath) {
+        $EnvText = Get-Content -Path $SupabaseEnvPath -Raw
+        Assert-Test "Supabase: .env.example contains SUPABASE_URL" ($EnvText -match "SUPABASE_URL") "Missing SUPABASE_URL in .env.example"
+    }
+    Assert-Test "Supabase: No firebase.json generated" (-not (Test-Path (Join-Path $SupabaseTarget "firebase.json"))) "firebase.json should not exist"
+
+    # -------------------------------------------------------------
+    # TEST CASE 8: BaaS Firebase Scaffolding (-BaaS firebase)
+    # -------------------------------------------------------------
+    Write-Host "`n[8/9] Testing BaaS: Firebase Scaffolding..." -ForegroundColor Yellow
+    $FirebaseTarget = Join-Path $TempBase "test-firebase-app"
+    
+    & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
+        -ProjectName "TestFirebaseApp" `
+        -Profile "android" `
+        -TargetDir $FirebaseTarget `
+        -BaaS "firebase" `
+        -NonInteractive
+
+    Assert-Test "Firebase: Target Dir Created" (Test-Path $FirebaseTarget) "Dir not found"
+    Assert-Test "Firebase: firebase.json exists" (Test-Path (Join-Path $FirebaseTarget "firebase.json")) "firebase.json missing"
+    $FirestoreRulesPath = Join-Path $FirebaseTarget "firestore.rules"
+    Assert-Test "Firebase: firestore.rules exists" (Test-Path $FirestoreRulesPath) "firestore.rules missing"
+    if (Test-Path $FirestoreRulesPath) {
+        $RulesContent = Get-Content -Path $FirestoreRulesPath -Raw
+        Assert-Test "Firebase: Rules contains isAuthenticated" ($RulesContent -match "isAuthenticated") "isAuthenticated missing in rules"
+    }
+    Assert-Test "Firebase: firestore.indexes.json exists" (Test-Path (Join-Path $FirebaseTarget "firestore.indexes.json")) "firestore.indexes.json missing"
+    Assert-Test "Firebase: Android Integration Guide exists" (Test-Path (Join-Path $FirebaseTarget "docs/standards/android/FIREBASE_INTEGRATION.md")) "Guide missing"
+    
+    $FirebaseGitIgnorePath = Join-Path $FirebaseTarget ".gitignore"
+    if (Test-Path $FirebaseGitIgnorePath) {
+        $GitIgnoreText = Get-Content -Path $FirebaseGitIgnorePath -Raw
+        Assert-Test "Firebase: .gitignore protects google-services.json" ($GitIgnoreText -match "google-services.json") "Missing google-services.json in .gitignore"
+    }
+    Assert-Test "Firebase: No supabase directory generated" (-not (Test-Path (Join-Path $FirebaseTarget "supabase"))) "supabase dir should not exist"
+
+    # -------------------------------------------------------------
+    # TEST CASE 9: BaaS Hybrid Scaffolding (-BaaS both)
+    # -------------------------------------------------------------
+    Write-Host "`n[9/9] Testing BaaS: Hybrid (Both) Scaffolding..." -ForegroundColor Yellow
+    $BothTarget = Join-Path $TempBase "test-both-app"
+    
+    & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
+        -ProjectName "TestBothApp" `
+        -Profile "android" `
+        -TargetDir $BothTarget `
+        -BaaS "both" `
+        -NonInteractive
+
+    Assert-Test "Both: Target Dir Created" (Test-Path $BothTarget) "Dir not found"
+    Assert-Test "Both: Supabase migration exists" (Test-Path (Join-Path $BothTarget "supabase/migrations/0001_initial_schema.sql")) "Migration missing"
+    Assert-Test "Both: Firebase json exists" (Test-Path (Join-Path $BothTarget "firebase.json")) "firebase.json missing"
+    Assert-Test "Both: Both integration guides exist" ((Test-Path (Join-Path $BothTarget "docs/standards/android/SUPABASE_INTEGRATION.md")) -and (Test-Path (Join-Path $BothTarget "docs/standards/android/FIREBASE_INTEGRATION.md"))) "One or both guides missing"
 
 } finally {
     # Cleanup temporary test directory

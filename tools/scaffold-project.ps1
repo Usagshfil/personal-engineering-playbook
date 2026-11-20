@@ -19,6 +19,9 @@ param(
     [ValidateSet("gitflow", "trunk-based")]
     [string]$DeliveryModel = "gitflow",
 
+    [ValidateSet("none", "supabase", "firebase", "both")]
+    [string]$BaaS = "none",
+
     [switch]$IncludeAgentDocs,
 
     [switch]$IncludeCodeRabbit,
@@ -115,7 +118,21 @@ if (-not $NonInteractive -and [string]::IsNullOrWhiteSpace($ProjectName)) {
     $DeliveryChoice = Read-Host "Choose workflow [1-2] (Default: 1)"
     if ($DeliveryChoice -eq "2") { $DeliveryModel = "trunk-based" } else { $DeliveryModel = "gitflow" }
 
-    # 6. Optional Tooling & Agent Integrations
+    # 6. Backend-as-a-Service (BaaS) Provider
+    Write-Host "`nSelect Backend-as-a-Service (BaaS) Provider:" -ForegroundColor Cyan
+    Write-Host "  1) None / Custom API       (Pure offline/local or custom backend) [Default]"
+    Write-Host "  2) Supabase                (PostgreSQL 16, Auth, Realtime, RLS, Storage) [Recommended for Booking]"
+    Write-Host "  3) Firebase                (Firestore NoSQL, Firebase Auth, FCM Push Notifications)"
+    Write-Host "  4) Both (Hybrid)           (Supabase Relational/Auth + Firebase FCM Notifications)"
+    $BaaSChoice = Read-Host "Choose BaaS [1-4] (Default: 1)"
+    switch ($BaaSChoice) {
+        "2" { $BaaS = "supabase" }
+        "3" { $BaaS = "firebase" }
+        "4" { $BaaS = "both" }
+        default { $BaaS = "none" }
+    }
+
+    # 7. Optional Tooling & Agent Integrations
     Write-Host "`nSelect Optional Tooling & Agent Integrations:" -ForegroundColor Cyan
     $AgentDocsChoice = Read-Host "  [?] Include Curated Agent Skills & Tech Standards (.agent/skills & docs/standards)? [Y/n] (Default: Y)"
     if ($AgentDocsChoice -notmatch "^[nN]") { $IncludeAgentDocs = $true }
@@ -149,6 +166,7 @@ Write-Host "Target Directory : $TargetFullPath"
 Write-Host "Profile          : $Profile"
 Write-Host "Package ID       : $PackageId"
 Write-Host "Delivery Model   : $DeliveryModel"
+Write-Host "BaaS Provider    : $BaaS"
 Write-Host "Agent Skills/Docs: $(if ($IncludeAgentDocs) { 'Yes' } else { 'No' })"
 Write-Host "CodeRabbit Gate  : $(if ($IncludeCodeRabbit) { 'Yes' } else { 'No' })"
 Write-Host "Figma & MCP Stubs: $(if ($IncludeMcp) { 'Yes' } else { 'No' })"
@@ -244,6 +262,13 @@ $ProfileTechSummary = switch ($Profile) {
     }
 }
 
+$BaaSSummary = switch ($BaaS) {
+    "supabase" { "*   **Backend-as-a-Service**: Supabase (PostgreSQL 16, Auth, Realtime Websockets, Row-Level Security)" }
+    "firebase" { "*   **Backend-as-a-Service**: Firebase (Firestore NoSQL, Firebase Auth, FCM Push Notifications)" }
+    "both"     { "*   **Backend-as-a-Service**: Hybrid (Supabase Relational/Auth SSOT + Firebase FCM Push Notifications)" }
+    default    { "*   **Backend-as-a-Service**: None (Offline-First / Custom Backend API)" }
+}
+
 $ProjectOverlayContent = @"
 # Project Specification: $ProjectName
 
@@ -262,6 +287,7 @@ $ProjectOverlayContent = @"
 
 ### Technology Stack Summary
 $ProfileTechSummary
+$BaaSSummary
 
 ---
 
@@ -393,6 +419,26 @@ $AdrContent = (Get-Content -Path (Join-Path $PlaybookRoot "templates/04-ADR_TEMP
 Write-TargetFile "docs/adr/0001-initial-architecture.md" $AdrContent
 
 # 3.6 Standard .gitignore & .env.example
+$BaaSGitIgnore = ""
+if ($BaaS -in "supabase", "both") {
+    $BaaSGitIgnore += @"
+
+# Supabase Local State
+supabase/.temp/
+.supabase/
+"@
+}
+if ($BaaS -in "firebase", "both") {
+    $BaaSGitIgnore += @"
+
+# Firebase Credentials & Local Emulators (NEVER COMMIT)
+google-services.json
+GoogleService-Info.plist
+firebase-adminsdk*.json
+.firebase/
+"@
+}
+
 $GitIgnoreContent = @"
 # Secrets & Credentials (NEVER COMMIT)
 .env
@@ -405,7 +451,7 @@ $GitIgnoreContent = @"
 *.keystore
 local.properties
 credentials.json
-secrets.xml
+secrets.xml$BaaSGitIgnore
 
 # IDE & Editor Configuration
 .idea/
@@ -433,6 +479,24 @@ coverage/
 "@
 Write-TargetFile ".gitignore" $GitIgnoreContent
 
+$BaaSEnvContent = ""
+if ($BaaS -in "supabase", "both") {
+    $BaaSEnvContent += @"
+
+# Supabase Credentials (Template)
+# Use public anon key on mobile clients; NEVER distribute service_role key to clients!
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+"@
+}
+if ($BaaS -in "firebase", "both") {
+    $BaaSEnvContent += @"
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-project-id
+"@
+}
+
 $EnvExampleContent = @"
 # Environment Variables Template for $ProjectName
 # Copy this file to .env and replace placeholders with real local secrets.
@@ -447,7 +511,7 @@ API_BASE_URL=https://api.example.com/v1
 API_TIMEOUT_MS=5000
 
 # Security Secrets (Dummy Placeholders)
-APP_SECRET_KEY=change_me_to_a_secure_random_64_character_string
+APP_SECRET_KEY=change_me_to_a_secure_random_64_character_string$BaaSEnvContent
 "@
 Write-TargetFile ".env.example" $EnvExampleContent
 
@@ -1255,6 +1319,342 @@ Welcome to the official developer documentation for **$ProjectName**.
 </Columns>
 "@
     Write-TargetFile "index.mdx" $MintlifyIndexMdx
+}
+
+# -----------------------------------------------------------------
+# 8.5 Backend-as-a-Service (Supabase & Firebase)
+# -----------------------------------------------------------------
+if ($BaaS -in "supabase", "both") {
+    Write-InfoStep "Scaffolding Supabase PostgreSQL & Realtime Configuration..."
+    Ensure-Dir "supabase/migrations"
+
+    $SupabaseMigration = @'
+-- 0001_initial_schema.sql
+-- Supabase PostgreSQL 16+ Schema for {{PROJECT_NAME}}
+-- Compliant with Level 1 Security & Row-Level Security (RLS) standards
+
+-- 1. Extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- 2. Venues & Courts
+CREATE TABLE IF NOT EXISTS venues (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS courts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    venue_id UUID NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    sport_type TEXT NOT NULL DEFAULT 'BADMINTON',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 3. Court Slots
+CREATE TABLE IF NOT EXISTS court_slots (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    court_id UUID NOT NULL REFERENCES courts(id) ON DELETE CASCADE,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    price_cents INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'HOLD', 'BOOKED')),
+    hold_user_id UUID,
+    hold_expires_at TIMESTAMPTZ,
+    version INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_slot_time CHECK (end_time > start_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_court_slots_court_start ON court_slots(court_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_court_slots_status ON court_slots(status);
+
+-- 4. Bookings
+CREATE TABLE IF NOT EXISTS bookings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slot_id UUID NOT NULL REFERENCES court_slots(id) ON DELETE RESTRICT,
+    user_id UUID NOT NULL,
+    status TEXT NOT NULL DEFAULT 'CONFIRMED' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED')),
+    total_cents INTEGER NOT NULL,
+    payment_reference TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+
+-- 5. Atomic Slot Reservation Procedure (OCC + Row-Level Locking)
+-- Guarantees atomic 5-minute hold without race conditions or double bookings
+CREATE OR REPLACE FUNCTION hold_court_slot(
+    p_slot_id UUID,
+    p_user_id UUID,
+    p_hold_minutes INTEGER DEFAULT 5
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_current_status TEXT;
+    v_hold_expires TIMESTAMPTZ;
+BEGIN
+    -- Acquire exclusive row lock on slot
+    SELECT status, hold_expires_at
+    INTO v_current_status, v_hold_expires
+    FROM court_slots
+    WHERE id = p_slot_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Slot % not found', p_slot_id;
+    END IF;
+
+    -- Reclaim slot if available or if existing hold has expired
+    IF v_current_status = 'AVAILABLE' OR (v_current_status = 'HOLD' AND v_hold_expires <= NOW()) THEN
+        UPDATE court_slots
+        SET status = 'HOLD',
+            hold_user_id = p_user_id,
+            hold_expires_at = NOW() + (p_hold_minutes || ' minutes')::INTERVAL,
+            version = version + 1
+        WHERE id = p_slot_id;
+
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$;
+
+-- 6. Row-Level Security (RLS) Invariants
+ALTER TABLE venues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE courts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE court_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Public venues read" ON venues FOR SELECT USING (true);
+CREATE POLICY "Public courts read" ON courts FOR SELECT USING (true);
+CREATE POLICY "Public court slots read" ON court_slots FOR SELECT USING (true);
+
+CREATE POLICY "Users read own bookings" ON bookings
+    FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users insert own bookings" ON bookings
+    FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+    Write-TargetFile "supabase/migrations/0001_initial_schema.sql" $SupabaseMigration
+
+    $SupabaseConfig = @'
+# Supabase Local Development Configuration for {{PROJECT_NAME}}
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+    Write-TargetFile "supabase/config.toml" $SupabaseConfig
+
+    if ($Profile -in "android", "fullstack") {
+        Ensure-Dir "docs/standards/android"
+        $SupabaseIntegrationDoc = @'
+# Supabase Android Integration Standard: {{PROJECT_NAME}}
+
+> Tier 2 Android Technology Standard — Supabase Kotlin Multiplatform Client
+
+## 1. Architectural Role
+In this architecture, Supabase serves as the cloud **Single Source of Truth (SSOT)**:
+*   **Database**: PostgreSQL 16+ accessed via `postgrest-kt`.
+*   **Authentication**: Managed JWT session handling via `gotrue-kt`.
+*   **Realtime**: WebSocket live changefeeds via `realtime-kt` for instantaneous slot updates.
+*   **Storage**: Asset storage for venue photos via `storage-kt`.
+
+## 2. Dependency Configuration (`libs.versions.toml`)
+```toml
+[versions]
+supabase = "3.1.1"
+ktor = "3.0.3"
+
+[libraries]
+supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
+supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt" }
+supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+```
+
+## 3. Dependency Injection (Hilt)
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object SupabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideSupabaseClient(): SupabaseClient {
+        return createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_ANON_KEY
+        ) {
+            install(Postgrest)
+            install(Auth)
+            install(Realtime)
+        }
+    }
+}
+```
+
+## 4. Atomic Slot Reservation (Calling RPC)
+Never execute non-atomic slot updates directly from the client. Always invoke the atomic PostgreSQL stored procedure:
+
+```kotlin
+suspend fun holdSlot(slotId: String, userId: String, holdMinutes: Int = 5): Boolean {
+    val result = supabase.postgrest.rpc(
+        function = "hold_court_slot",
+        parameters = buildJsonObject {
+            put("p_slot_id", slotId)
+            put("p_user_id", userId)
+            put("p_hold_minutes", holdMinutes)
+        }
+    ).decodeAs<Boolean>()
+    return result
+}
+```
+
+## 5. Security Invariant (Level 1 Gate)
+*   **Zero Service-Role Key Exposure**: Only distribute `SUPABASE_ANON_KEY` to client apps. The `service_role` key bypasses Row-Level Security and must NEVER be placed in Android code, `.properties`, or version control.
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+        Write-TargetFile "docs/standards/android/SUPABASE_INTEGRATION.md" $SupabaseIntegrationDoc
+    }
+}
+
+if ($BaaS -in "firebase", "both") {
+    Write-InfoStep "Scaffolding Firebase & Firestore Security Rules Configuration..."
+
+    $FirebaseJson = @'
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}
+'@
+    Write-TargetFile "firebase.json" $FirebaseJson
+
+    $FirestoreRules = @'
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Venues & Courts: Publicly readable, admin write-only
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /courts/{courtId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // Court Slots: Publicly readable; reservation requires authentication
+    match /court_slots/{slotId} {
+      allow read: if true;
+      allow update: if isAuthenticated();
+      allow create, delete: if false;
+    }
+
+    // Bookings: Isolated per authenticated user
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}
+'@
+    Write-TargetFile "firestore.rules" $FirestoreRules
+
+    $FirestoreIndexes = @'
+{
+  "indexes": [],
+  "fieldOverrides": []
+}
+'@
+    Write-TargetFile "firestore.indexes.json" $FirestoreIndexes
+
+    if ($Profile -in "android", "fullstack") {
+        Ensure-Dir "docs/standards/android"
+        $FirebaseIntegrationDoc = @'
+# Firebase Android Integration Standard: {{PROJECT_NAME}}
+
+> Tier 2 Android Technology Standard — Firebase Firestore, Auth, and Cloud Messaging (FCM)
+
+## 1. Architectural Role
+*   **Firestore**: NoSQL cloud database with real-time snapshot listeners.
+*   **Firebase Auth**: OAuth and phone verification provider.
+*   **Cloud Messaging (FCM)**: Android push notification delivery engine.
+
+## 2. Dependency Configuration (`libs.versions.toml`)
+```toml
+[versions]
+firebase-bom = "33.7.0"
+
+[libraries]
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+```
+
+## 3. FCM Push Notification Service
+Implement `FirebaseMessagingService` in `:core:network` or `:core:notifications`:
+```kotlin
+class AppFirebaseMessagingService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+        // Send refreshed FCM token to backend/Supabase
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        // Handle incoming push notification
+    }
+}
+```
+
+## 4. Security & Secret Defense (Level 1 Invariant)
+*   `google-services.json` must be excluded from public repositories via `.gitignore`.
+*   Never store `firebase-adminsdk*.json` private credentials in mobile client code or Git.
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+        Write-TargetFile "docs/standards/android/FIREBASE_INTEGRATION.md" $FirebaseIntegrationDoc
+    }
 }
 
 # -----------------------------------------------------------------
