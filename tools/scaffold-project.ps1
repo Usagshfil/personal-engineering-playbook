@@ -214,7 +214,8 @@ function Write-TargetFile {
     if (-not (Test-Path $Parent)) {
         New-Item -Path $Parent -ItemType Directory -Force | Out-Null
     }
-    Set-Content -Path $Dest -Value $Content.Trim() -Encoding UTF8
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Dest, ($Content.Trim() + "`n"), $Utf8NoBom)
     Write-SuccessStep "Created $RelativePath"
 }
 

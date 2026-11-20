@@ -57,6 +57,9 @@ try {
     Assert-Test "Copilot Rules copilot-instructions.md" (Test-Path (Join-Path $LeanTarget ".github/copilot-instructions.md")) "copilot-instructions.md missing"
     Assert-Test "Progress Tracking PROJECT_PROGRESS.md" (Test-Path (Join-Path $LeanTarget "PROJECT_PROGRESS.md")) "PROJECT_PROGRESS.md missing"
     Assert-Test "Version Catalog libs.versions.toml" (Test-Path (Join-Path $LeanTarget "gradle/libs.versions.toml")) "libs.versions.toml missing"
+    $LibsBytes = [System.IO.File]::ReadAllBytes((Join-Path $LeanTarget "gradle/libs.versions.toml"))
+    $HasBom = ($LibsBytes.Length -ge 3 -and $LibsBytes[0] -eq 0xEF -and $LibsBytes[1] -eq 0xBB -and $LibsBytes[2] -eq 0xBF)
+    Assert-Test "Version Catalog has no UTF-8 BOM" (-not $HasBom) "libs.versions.toml contains unexpected UTF-8 BOM (\ufeff)"
     Assert-Test "Root settings.gradle.kts Generated" (Test-Path (Join-Path $LeanTarget "settings.gradle.kts")) "settings.gradle.kts missing"
     Assert-Test "Root build.gradle.kts Generated" (Test-Path (Join-Path $LeanTarget "build.gradle.kts")) "root build.gradle.kts missing"
     Assert-Test "Root gradle.properties Generated" (Test-Path (Join-Path $LeanTarget "gradle.properties")) "gradle.properties missing"
@@ -375,6 +378,10 @@ try {
     Assert-Test "Modular: :feature:home AndroidManifest.xml exists" (Test-Path (Join-Path $ModularTarget "feature/home/src/main/AndroidManifest.xml")) "feature:home manifest missing"
 
     # 11.3 Root Configuration & Wiring Verifications
+    $ModularLibsBytes = [System.IO.File]::ReadAllBytes((Join-Path $ModularTarget "gradle/libs.versions.toml"))
+    $ModularHasBom = ($ModularLibsBytes.Length -ge 3 -and $ModularLibsBytes[0] -eq 0xEF -and $ModularLibsBytes[1] -eq 0xBB -and $ModularLibsBytes[2] -eq 0xBF)
+    Assert-Test "Modular: Version Catalog has no UTF-8 BOM" (-not $ModularHasBom) "libs.versions.toml contains unexpected UTF-8 BOM (\ufeff)"
+
     $ModularSettingsText = Get-Content -Path (Join-Path $ModularTarget "settings.gradle.kts") -Raw
     Assert-Test "Modular: settings includes :core:domain" ($ModularSettingsText -match 'include\(":core:domain"\)') "Missing :core:domain in settings.gradle.kts"
     Assert-Test "Modular: settings includes :core:database" ($ModularSettingsText -match 'include\(":core:database"\)') "Missing :core:database in settings.gradle.kts"
