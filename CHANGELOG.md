@@ -26,8 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       - **Supabase**: PostgreSQL 16+ initial schema with `uuid-ossp`, `pgcrypto`, atomic 5-minute slot hold procedure (`hold_court_slot` with `SELECT ... FOR UPDATE`), Row-Level Security (RLS) policies, `supabase/config.toml`, `.env.example`, and Android Kotlin integration guide (`SUPABASE_INTEGRATION.md`).
       - **Firebase**: Generates `firebase.json`, `firestore.rules` (auth and ownership checks), `firestore.indexes.json`, `google-services.json` secret defense, and Android integration guide (`FIREBASE_INTEGRATION.md`).
       - **Both (Hybrid)**: Injects Supabase relational data SSOT + Firebase FCM Push Notification support.
+    - **Multi-Module Clean Architecture (`-Modular`)**: Added `-Modular` switch and interactive wizard selection to scaffold Android projects with decoupled Gradle modules:
+      - `:core:domain`: Pure Kotlin JVM library (`kotlin("jvm")`) with domain entities, repository contracts, and use cases, completely isolated from framework and UI dependencies.
+      - `:core:database`: Android library module encapsulating Room entities, DAOs, schema directories, and ProGuard consumer rules.
+      - `:core:data`: Android library module implementing repository contracts, data mappers, and Hilt dependency injection bindings.
+      - `:feature:home`: Android library module containing Jetpack Compose UI, ViewModels, and UI state models.
+      - `:app`: Application module aggregating all core and feature modules.
+      - Fully wired `settings.gradle.kts`, `build.gradle.kts`, `gradle/libs.versions.toml`, and modular CI secret scanning paths (`app/ core/ feature/`).
     - **Smart Root Gradle Generation**: Automatically generates root `settings.gradle.kts`, `build.gradle.kts`, `gradle.properties`, `gradle-wrapper.properties` (Gradle 8.10.2), `proguard-rules.pro`, `themes.xml`, and `data_extraction_rules.xml` by default for the Android profile so Android Studio immediately renders the "Android View" on first launch; supports non-destructive preservation for existing repos and `-SkipBuildFiles`.
-  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying lean zero-bloat scaffolding, all optional modules, all 4 profiles, all BaaS configurations, and root build generation with **93/93 passing assertions** across 10 test suites.
+  - Built comprehensive automated verification test harness (`tools/test-scaffolder.ps1`) verifying lean zero-bloat scaffolding, all optional modules, all 4 profiles, all BaaS configurations, multi-module architecture, and root build generation with **133/133 passing assertions** across 11 test suites.
+- **Atomic Concurrency Defense Standard (`06-technologies/android/04-room-database.md`)**:
+  - Expanded Room Database standard with the **Atomic Conditional Update Pattern** to eliminate Time-of-Check to Time-of-Use (TOCTOU) race conditions in state transitions (e.g. reserving or updating inventory/slots).
+  - Documented `@Query("UPDATE ... WHERE id = :id AND ...")` returning affected rows count `Int` (`1` on success, `0` on concurrent collision).
+  - Updated common mistakes and pedagogical validation checklists to mandate atomic conditional SQL updates over read-then-write sequences in high-contention business logic.
 - **Static Documentation Site via Mintlify**:
   - Implemented complete Mintlify site configuration in `docs.json` with 5 navigation tabs (Overview, Universal Core, Technology Standards, AI Agents & Skills, Templates & Reports).
   - Authored interactive landing page `index.mdx` with Quick Start steps, card grids, and 5-pillar navigation.

@@ -22,6 +22,8 @@ param(
     [ValidateSet("none", "supabase", "firebase", "both")]
     [string]$BaaS = "none",
 
+    [switch]$Modular,
+
     [switch]$IncludeAgentDocs,
 
     [switch]$IncludeCodeRabbit,
@@ -113,6 +115,15 @@ if (-not $NonInteractive -and [string]::IsNullOrWhiteSpace($ProjectName)) {
         $PackageId = if ([string]::IsNullOrWhiteSpace($InputPackage)) { $DefaultPackage } else { $InputPackage.Trim() }
     }
 
+    # 4.5 Android Module Architecture
+    if ($Profile -eq "android") {
+        Write-Host "`nSelect Android Module Architecture:" -ForegroundColor Cyan
+        Write-Host "  1) Multi-Module Clean Architecture (:app, :core:domain, :core:database, :core:data, :feature:home) [Recommended for Teams]"
+        Write-Host "  2) Single-Module Layout            (:app with package-by-layer) [Lean & Simple]"
+        $ModuleChoice = Read-Host "Choose architecture [1-2] (Default: 1)"
+        if ($ModuleChoice -ne "2") { $Modular = $true }
+    }
+
     # 5. Delivery Model
     Write-Host "`nSelect Version Control & Delivery Workflow:" -ForegroundColor Cyan
     Write-Host "  1) Gitflow Workflow  (Permanent main/develop, transient feature/release/hotfix) [Recommended]"
@@ -167,6 +178,7 @@ Write-Header "SCAFFOLDING PROJECT: $ProjectName"
 Write-Host "Target Directory : $TargetFullPath"
 Write-Host "Profile          : $Profile"
 Write-Host "Package ID       : $PackageId"
+Write-Host "Module Structure : $(if ($Modular) { 'Multi-Module (:core:*, :feature:*)' } else { 'Single-Module (:app)' })"
 Write-Host "Delivery Model   : $DeliveryModel"
 Write-Host "BaaS Provider    : $BaaS"
 Write-Host "Agent Skills/Docs: $(if ($IncludeAgentDocs) { 'Yes' } else { 'No' })"
@@ -224,8 +236,10 @@ if (Test-Path $AgentsMdSource) {
 # 3.2 .agent/PROJECT.md (Level 3 Project Overlay)
 $ProfileTechSummary = switch ($Profile) {
     "android" {
+        $ModSummary = if ($Modular) { "Multi-Module Clean Architecture (:core:domain, :core:database, :core:data, :feature:home, :app)" } else { "Single-Module (:app with Clean Architecture packages)" }
         @"
 *   **Platform**: Android (Target SDK 35, Min SDK 26)
+*   **Module Structure**: $ModSummary
 *   **Language & Tooling**: Kotlin 2.0+, Gradle Version Catalogs (`libs.versions.toml`)
 *   **UI Framework**: Jetpack Compose (Material 3), Unidirectional Data Flow (UDF)
 *   **Persistence & Sync**: Room Database (SSOT), WorkManager background sync
@@ -525,26 +539,68 @@ Write-InfoStep "Generating Profile-Specific Architecture ($Profile)..."
 switch ($Profile) {
     "android" {
         $PackageDir = $PackageId -replace '\.', '/'
-        Ensure-Dir "app/src/main/java/$PackageDir/core"
-        Ensure-Dir "app/src/main/java/$PackageDir/data/local"
-        Ensure-Dir "app/src/main/java/$PackageDir/data/remote"
-        Ensure-Dir "app/src/main/java/$PackageDir/data/repository"
-        Ensure-Dir "app/src/main/java/$PackageDir/domain/model"
-        Ensure-Dir "app/src/main/java/$PackageDir/domain/repository"
-        Ensure-Dir "app/src/main/java/$PackageDir/presentation"
-        Ensure-Dir "app/src/main/java/$PackageDir/sync"
-        Ensure-Dir "app/src/test/java/$PackageDir"
-        Ensure-Dir "app/src/androidTest/java/$PackageDir"
+        if ($Modular) {
+            # Multi-Module Clean Architecture Layout
+            Ensure-Dir "app/src/main/java/$PackageDir/presentation"
+            Ensure-Dir "app/src/test/java/$PackageDir"
+            Ensure-Dir "app/src/androidTest/java/$PackageDir"
+            Ensure-Dir "app/src/main/res/values"
+            Ensure-Dir "app/src/main/res/xml"
+
+            # Core: Domain (Pure Kotlin JVM - Models, Repository Contracts, UseCases)
+            Ensure-Dir "core/domain/src/main/java/$PackageDir/core/domain/model"
+            Ensure-Dir "core/domain/src/main/java/$PackageDir/core/domain/repository"
+            Ensure-Dir "core/domain/src/main/java/$PackageDir/core/domain/usecase"
+            Ensure-Dir "core/domain/src/test/java/$PackageDir/core/domain"
+
+            # Core: Database (Android Library + Room - Entities, DAOs, Database)
+            Ensure-Dir "core/database/src/main/java/$PackageDir/core/database/dao"
+            Ensure-Dir "core/database/src/main/java/$PackageDir/core/database/entity"
+            Ensure-Dir "core/database/src/main/res"
+            Ensure-Dir "core/database/src/test/java/$PackageDir/core/database"
+
+            # Core: Data (Android Library + Hilt - Repository Implementations, Mappers, DI)
+            Ensure-Dir "core/data/src/main/java/$PackageDir/core/data/repository"
+            Ensure-Dir "core/data/src/main/java/$PackageDir/core/data/mapper"
+            Ensure-Dir "core/data/src/main/java/$PackageDir/core/data/di"
+            Ensure-Dir "core/data/src/test/java/$PackageDir/core/data"
+
+            # Feature: Home (Android Library + Compose + Hilt - ViewModels, UI State, Screens)
+            Ensure-Dir "feature/home/src/main/java/$PackageDir/feature/home"
+            Ensure-Dir "feature/home/src/test/java/$PackageDir/feature/home"
+        } else {
+            # Single-Module Clean Architecture Layout
+            Ensure-Dir "app/src/main/java/$PackageDir/core"
+            Ensure-Dir "app/src/main/java/$PackageDir/data/local"
+            Ensure-Dir "app/src/main/java/$PackageDir/data/remote"
+            Ensure-Dir "app/src/main/java/$PackageDir/data/repository"
+            Ensure-Dir "app/src/main/java/$PackageDir/domain/model"
+            Ensure-Dir "app/src/main/java/$PackageDir/domain/repository"
+            Ensure-Dir "app/src/main/java/$PackageDir/presentation"
+            Ensure-Dir "app/src/main/java/$PackageDir/sync"
+            Ensure-Dir "app/src/test/java/$PackageDir"
+            Ensure-Dir "app/src/androidTest/java/$PackageDir"
+            Ensure-Dir "app/src/main/res/values"
+            Ensure-Dir "app/src/main/res/xml"
+        }
         Ensure-Dir "gradle"
         Ensure-Dir "gradle/wrapper"
         Ensure-Dir "fastlane"
-        Ensure-Dir "app/src/main/res/values"
-        Ensure-Dir "app/src/main/res/xml"
 
         if (-not $SkipBuildFiles) {
             # Root settings.gradle.kts (Non-destructive check)
             $SettingsPath = Join-Path $TargetFullPath "settings.gradle.kts"
             if (-not (Test-Path $SettingsPath) -or $Force) {
+                $ModularIncludes = if ($Modular) {
+                    @"
+
+include(":core:domain")
+include(":core:database")
+include(":core:data")
+include(":feature:home")
+"@
+                } else { "" }
+
                 $SettingsGradle = @'
 pluginManagement {
     repositories {
@@ -568,8 +624,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "{{PROJECT_NAME}}"
-include(":app")
-'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+include(":app"){{MODULAR_INCLUDES}}
+'@.Replace("{{PROJECT_NAME}}", $ProjectName).Replace("{{MODULAR_INCLUDES}}", $ModularIncludes)
                 Write-TargetFile "settings.gradle.kts" $SettingsGradle
             } else {
                 Write-InfoStep "Preserving existing settings.gradle.kts"
@@ -582,7 +638,9 @@ include(":app")
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
@@ -692,7 +750,9 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
@@ -700,8 +760,251 @@ room = { id = "androidx.room", version.ref = "room" }
 "@
         Write-TargetFile "gradle/libs.versions.toml" $LibsVersionsToml
 
-        # App build.gradle.kts
-        $BuildGradleContent = @"
+        if ($Modular) {
+            # Multi-Module: app/build.gradle.kts
+            $BuildGradleContent = @"
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace = "$PackageId"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "$PackageId"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(project(":core:domain"))
+    implementation(project(":core:database"))
+    implementation(project(":core:data"))
+    implementation(project(":feature:home"))
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+}
+"@
+            Write-TargetFile "app/build.gradle.kts" $BuildGradleContent
+
+            # Sub-module build.gradle.kts & manifests
+            # 1. :core:domain (Pure Kotlin JVM - zero Android/Compose dependencies)
+            $DomainBuildGradle = @'
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    testImplementation(libs.junit)
+}
+'@
+            Write-TargetFile "core/domain/build.gradle.kts" $DomainBuildGradle
+
+            # 2. :core:database (Android Library + Room)
+            $DatabaseBuildGradle = @"
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+android {
+    namespace = "$PackageId.core.database"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    room {
+        schemaDirectory("`$projectDir/schemas")
+    }
+}
+
+dependencies {
+    implementation(project(":core:domain"))
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+}
+"@
+            Write-TargetFile "core/database/build.gradle.kts" $DatabaseBuildGradle
+            Write-TargetFile "core/database/consumer-rules.pro" "# Proguard rules for :core:database`n"
+            Write-TargetFile "core/database/src/main/AndroidManifest.xml" "<?xml version=""1.0"" encoding=""utf-8""?>`n<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" />`n"
+
+            # 3. :core:data (Android Library + Hilt - implements repository interfaces)
+            $DataBuildGradle = @"
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace = "$PackageId.core.data"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation(project(":core:domain"))
+    implementation(project(":core:database"))
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+}
+"@
+            Write-TargetFile "core/data/build.gradle.kts" $DataBuildGradle
+            Write-TargetFile "core/data/consumer-rules.pro" "# Proguard rules for :core:data`n"
+            Write-TargetFile "core/data/src/main/AndroidManifest.xml" "<?xml version=""1.0"" encoding=""utf-8""?>`n<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" />`n"
+
+            # 4. :feature:home (Android Library + Compose + Hilt - UI and ViewModels)
+            $FeatureHomeBuildGradle = @"
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
+}
+
+android {
+    namespace = "$PackageId.feature.home"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(project(":core:domain"))
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+}
+"@
+            Write-TargetFile "feature/home/build.gradle.kts" $FeatureHomeBuildGradle
+            Write-TargetFile "feature/home/consumer-rules.pro" "# Proguard rules for :feature:home`n"
+            Write-TargetFile "feature/home/src/main/AndroidManifest.xml" "<?xml version=""1.0"" encoding=""utf-8""?>`n<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" />`n"
+
+        } else {
+            # Single-Module: app/build.gradle.kts
+            $BuildGradleContent = @"
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -773,7 +1076,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
 }
 "@
-        Write-TargetFile "app/build.gradle.kts" $BuildGradleContent
+            Write-TargetFile "app/build.gradle.kts" $BuildGradleContent
+        }
 
         # AndroidManifest.xml
         $ManifestContent = @"
@@ -851,6 +1155,7 @@ end
         Write-TargetFile "docs/TESTING_STRATEGY.md" $MobileTestingDoc
 
         # CI Workflow for Android
+        $SecretScanPaths = if ($Modular) { "app/ core/ feature/" } else { "app/src/" }
         $AndroidCiWorkflow = @"
 name: Android CI Quality Gate
 
@@ -882,7 +1187,7 @@ jobs:
       - name: Verify Secret Defense (No Hardcoded Credentials)
         run: |
           echo "Scanning for accidental secret leaks..."
-          ! grep -rnE "AIza[0-9A-Za-z-_]{35}|ghp_[0-9A-Za-z]{36}|-----BEGIN PRIVATE KEY-----" app/src/ || exit 1
+          ! grep -rnE "AIza[0-9A-Za-z-_]{35}|ghp_[0-9A-Za-z]{36}|-----BEGIN PRIVATE KEY-----" $SecretScanPaths || exit 1
 
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --no-daemon

@@ -144,6 +144,15 @@ interface NoteDao {
 
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteNote(id: Long): Int
+
+    // ATOMIC CONDITIONAL UPDATE (Concurrency Defense)
+    // Eliminates TOCTOU race condition: evaluates current state and transitions atomically in a single statement
+    @Query("""
+        UPDATE notes 
+        SET content = :newContent, created_at = :now
+        WHERE id = :id AND created_at = :expectedCreatedAt
+    """)
+    suspend fun updateNoteAtomically(id: Long, expectedCreatedAt: Long, newContent: String, now: Long): Int
 }
 
 @Database(
@@ -196,6 +205,9 @@ abstract class AppDatabase : RoomDatabase() {
 4.  **Silent Destructive Fallbacks in Production**:
     *   *Problem*: Leaving `.fallbackToDestructiveMigration()` active in release builds wipes customer data when a user upgrades across schema versions.
     *   *Remedy*: Restrict destructive fallbacks to debug configurations only (`if (BuildConfig.DEBUG) ...`) and provide automated or manual migrations for all production releases.
+5.  **TOCTOU Race Conditions in State Transitions (Non-Atomic Reservation/Hold)**:
+    *   *Problem*: Performing read-modify-write sequences in Kotlin coroutines (`val item = dao.get(); if (item.isAvailable) dao.upsert(item.copy(status = HOLD))`) creates a classic Time-of-Check to Time-of-Use (TOCTOU) race condition when concurrent background tasks or user actions execute simultaneously.
+    *   *Remedy*: Execute an atomic conditional SQL update directly in the DAO (`UPDATE items SET status = 'HOLD' WHERE id = :id AND status = 'AVAILABLE'`) and inspect the affected rows count (`1` = success, `0` = slot already reserved/conflict).
 
 ---
 
@@ -206,5 +218,6 @@ abstract class AppDatabase : RoomDatabase() {
 - [ ] Is `fallbackToDestructiveMigration()` strictly forbidden in release builds?
 - [ ] Are all foreign key and frequently filtered columns covered by explicit `@Index` annotations?
 - [ ] Are all DAO read operations returning reactive `Flow` or `suspend fun` for single queries?
+- [ ] Are state transitions and contested resource reservations protected against TOCTOU race conditions via atomic conditional SQL updates?
 - [ ] Are schema migrations verified with `MigrationTestHelper` automated unit tests?
 - [ ] Is sensitive data encrypted using SQLCipher or Android Keystore wrappers, with memory wiped after use?

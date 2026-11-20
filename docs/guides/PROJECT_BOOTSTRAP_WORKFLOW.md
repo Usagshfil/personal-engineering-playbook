@@ -14,19 +14,28 @@ This guide defines the complete end-to-end lifecycle for spinning up a new softw
 > **One-Command Automated Scaffolder**:
 > Instead of manually copying directories and creating configuration files, you can scaffold a fully configured project repository (including `AGENTS.md`, `.agent/PROJECT.md`, multi-agent rules, Clean Architecture directories, CI workflows, and project tracking) in seconds using the interactive CLI utility:
 > ```powershell
-> # Interactive Scaffolder Wizard (prompts for optional tools)
+> # Interactive Scaffolder Wizard (prompts for module architecture and optional tools)
 > powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1
 > 
-> # Direct Automated Command with Optional Tooling (CodeRabbit, Figma/MCP, BaaS, Skills & Vibe Coding Playbook)
+> # Direct Automated Command: Multi-Module Android Clean Architecture with Optional Tooling
 > powershell -ExecutionPolicy Bypass -File .\tools\scaffold-project.ps1 `
 >     -ProjectName "ZenithMobile" `
 >     -Profile "android" `
+>     -Modular `
 >     -TargetDir "./zenith-mobile" `
 >     -BaaS "supabase" `
 >     -IncludeAgentDocs `
 >     -IncludeCodeRabbit `
 >     -IncludeMcp
 > ```
+>
+> **Android Multi-Module Clean Architecture (`-Modular`)**:
+> Passing `-Modular` (or selecting Option 1 in the wizard) decomposes the Android project into decoupled modules:
+> *   `:core:domain`: Pure Kotlin JVM library (`kotlin("jvm")`) containing domain models, repository interfaces, and use cases with zero framework/Room/UI dependencies.
+> *   `:core:database`: Android library module encapsulating Room entities, DAOs with atomic conditional updates, and database classes. Depends on `:core:domain`.
+> *   `:core:data`: Android library module housing repository implementations, mappers, and Hilt DI modules. Depends on `:core:domain` and `:core:database`.
+> *   `:feature:home`: Android library module containing Compose screens, UI state, and ViewModels. Depends on `:core:domain`.
+> *   `:app`: Application entry point aggregating all feature and core modules with `MainActivity` and `Application`.
 
 Too many projects fail before writing code due to architectural churn, or fail during delivery due to missing gates, unverified AI code, or configuration drift. This workflow establishes a predictable, disciplined, and repeatable **8-Stage Path to Production**:
 

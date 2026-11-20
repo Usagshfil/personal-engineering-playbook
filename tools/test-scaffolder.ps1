@@ -319,7 +319,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 10: SkipBuildFiles Switch Verification
     # -------------------------------------------------------------
-    Write-Host "`n[10/10] Testing SkipBuildFiles Switch..." -ForegroundColor Yellow
+    Write-Host "`n[10/11] Testing SkipBuildFiles Switch..." -ForegroundColor Yellow
     $SkipTarget = Join-Path $TempBase "test-skip-build"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -333,6 +333,78 @@ try {
     Assert-Test "SkipBuild: No settings.gradle.kts" (-not (Test-Path (Join-Path $SkipTarget "settings.gradle.kts"))) "settings.gradle.kts should be skipped"
     Assert-Test "SkipBuild: No root build.gradle.kts" (-not (Test-Path (Join-Path $SkipTarget "build.gradle.kts"))) "root build.gradle.kts should be skipped"
     Assert-Test "SkipBuild: No gradle.properties" (-not (Test-Path (Join-Path $SkipTarget "gradle.properties"))) "gradle.properties should be skipped"
+
+    # -------------------------------------------------------------
+    # TEST CASE 11: Multi-Module Clean Architecture Android Profile (-Modular)
+    # -------------------------------------------------------------
+    Write-Host "`n[11/11] Testing Multi-Module Clean Architecture Android Profile (-Modular)..." -ForegroundColor Yellow
+    $ModularTarget = Join-Path $TempBase "modular-android-app"
+    
+    & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
+        -ProjectName "ModularAndroidApp" `
+        -Profile "android" `
+        -Modular `
+        -TargetDir $ModularTarget `
+        -PackageId "com.example.modularapp" `
+        -DeliveryModel "gitflow" `
+        -NonInteractive
+
+    Assert-Test "Modular: Target Dir Created" (Test-Path $ModularTarget) "Dir not found"
+    
+    # 11.1 Sub-module Directories
+    Assert-Test "Modular: :app presentation dir exists" (Test-Path (Join-Path $ModularTarget "app/src/main/java/com/example/modularapp/presentation")) "app presentation dir missing"
+    Assert-Test "Modular: :core:domain model dir exists" (Test-Path (Join-Path $ModularTarget "core/domain/src/main/java/com/example/modularapp/core/domain/model")) "core:domain model dir missing"
+    Assert-Test "Modular: :core:domain repository dir exists" (Test-Path (Join-Path $ModularTarget "core/domain/src/main/java/com/example/modularapp/core/domain/repository")) "core:domain repository dir missing"
+    Assert-Test "Modular: :core:domain usecase dir exists" (Test-Path (Join-Path $ModularTarget "core/domain/src/main/java/com/example/modularapp/core/domain/usecase")) "core:domain usecase dir missing"
+    Assert-Test "Modular: :core:database dao dir exists" (Test-Path (Join-Path $ModularTarget "core/database/src/main/java/com/example/modularapp/core/database/dao")) "core:database dao dir missing"
+    Assert-Test "Modular: :core:database entity dir exists" (Test-Path (Join-Path $ModularTarget "core/database/src/main/java/com/example/modularapp/core/database/entity")) "core:database entity dir missing"
+    Assert-Test "Modular: :core:data repository dir exists" (Test-Path (Join-Path $ModularTarget "core/data/src/main/java/com/example/modularapp/core/data/repository")) "core:data repository dir missing"
+    Assert-Test "Modular: :core:data di dir exists" (Test-Path (Join-Path $ModularTarget "core/data/src/main/java/com/example/modularapp/core/data/di")) "core:data di dir missing"
+    Assert-Test "Modular: :feature:home dir exists" (Test-Path (Join-Path $ModularTarget "feature/home/src/main/java/com/example/modularapp/feature/home")) "feature:home dir missing"
+
+    # 11.2 Sub-module Build Files and Manifests
+    Assert-Test "Modular: :core:domain build.gradle.kts exists" (Test-Path (Join-Path $ModularTarget "core/domain/build.gradle.kts")) "core:domain build file missing"
+    Assert-Test "Modular: :core:database build.gradle.kts exists" (Test-Path (Join-Path $ModularTarget "core/database/build.gradle.kts")) "core:database build file missing"
+    Assert-Test "Modular: :core:database consumer-rules.pro exists" (Test-Path (Join-Path $ModularTarget "core/database/consumer-rules.pro")) "core:database consumer-rules missing"
+    Assert-Test "Modular: :core:database AndroidManifest.xml exists" (Test-Path (Join-Path $ModularTarget "core/database/src/main/AndroidManifest.xml")) "core:database manifest missing"
+    Assert-Test "Modular: :core:data build.gradle.kts exists" (Test-Path (Join-Path $ModularTarget "core/data/build.gradle.kts")) "core:data build file missing"
+    Assert-Test "Modular: :core:data consumer-rules.pro exists" (Test-Path (Join-Path $ModularTarget "core/data/consumer-rules.pro")) "core:data consumer-rules missing"
+    Assert-Test "Modular: :core:data AndroidManifest.xml exists" (Test-Path (Join-Path $ModularTarget "core/data/src/main/AndroidManifest.xml")) "core:data manifest missing"
+    Assert-Test "Modular: :feature:home build.gradle.kts exists" (Test-Path (Join-Path $ModularTarget "feature/home/build.gradle.kts")) "feature:home build file missing"
+    Assert-Test "Modular: :feature:home consumer-rules.pro exists" (Test-Path (Join-Path $ModularTarget "feature/home/consumer-rules.pro")) "feature:home consumer-rules missing"
+    Assert-Test "Modular: :feature:home AndroidManifest.xml exists" (Test-Path (Join-Path $ModularTarget "feature/home/src/main/AndroidManifest.xml")) "feature:home manifest missing"
+
+    # 11.3 Root Configuration & Wiring Verifications
+    $ModularSettingsText = Get-Content -Path (Join-Path $ModularTarget "settings.gradle.kts") -Raw
+    Assert-Test "Modular: settings includes :core:domain" ($ModularSettingsText -match 'include\(":core:domain"\)') "Missing :core:domain in settings.gradle.kts"
+    Assert-Test "Modular: settings includes :core:database" ($ModularSettingsText -match 'include\(":core:database"\)') "Missing :core:database in settings.gradle.kts"
+    Assert-Test "Modular: settings includes :core:data" ($ModularSettingsText -match 'include\(":core:data"\)') "Missing :core:data in settings.gradle.kts"
+    Assert-Test "Modular: settings includes :feature:home" ($ModularSettingsText -match 'include\(":feature:home"\)') "Missing :feature:home in settings.gradle.kts"
+    
+    $ModularAppBuildText = Get-Content -Path (Join-Path $ModularTarget "app/build.gradle.kts") -Raw
+    Assert-Test "Modular: app depends on :core:domain" ($ModularAppBuildText -match 'project\(":core:domain"\)') "App missing :core:domain dependency"
+    Assert-Test "Modular: app depends on :core:database" ($ModularAppBuildText -match 'project\(":core:database"\)') "App missing :core:database dependency"
+    Assert-Test "Modular: app depends on :core:data" ($ModularAppBuildText -match 'project\(":core:data"\)') "App missing :core:data dependency"
+    Assert-Test "Modular: app depends on :feature:home" ($ModularAppBuildText -match 'project\(":feature:home"\)') "App missing :feature:home dependency"
+
+    $ModularDomainBuildText = Get-Content -Path (Join-Path $ModularTarget "core/domain/build.gradle.kts") -Raw
+    Assert-Test "Modular: :core:domain uses kotlin.jvm" ($ModularDomainBuildText -match 'alias\(libs\.plugins\.kotlin\.jvm\)') ":core:domain missing kotlin.jvm"
+
+    $ModularDatabaseBuildText = Get-Content -Path (Join-Path $ModularTarget "core/database/build.gradle.kts") -Raw
+    Assert-Test "Modular: :core:database depends on :core:domain" ($ModularDatabaseBuildText -match 'project\(":core:domain"\)') ":core:database missing :core:domain dependency"
+
+    $ModularDataBuildText = Get-Content -Path (Join-Path $ModularTarget "core/data/build.gradle.kts") -Raw
+    Assert-Test "Modular: :core:data depends on :core:domain" ($ModularDataBuildText -match 'project\(":core:domain"\)') ":core:data missing :core:domain dependency"
+    Assert-Test "Modular: :core:data depends on :core:database" ($ModularDataBuildText -match 'project\(":core:database"\)') ":core:data missing :core:database dependency"
+
+    $ModularFeatureBuildText = Get-Content -Path (Join-Path $ModularTarget "feature/home/build.gradle.kts") -Raw
+    Assert-Test "Modular: :feature:home depends on :core:domain" ($ModularFeatureBuildText -match 'project\(":core:domain"\)') ":feature:home missing :core:domain dependency"
+
+    $ModularProjectMdText = Get-Content -Path (Join-Path $ModularTarget ".agent/PROJECT.md") -Raw
+    Assert-Test "Modular: .agent/PROJECT.md documents Multi-Module" ($ModularProjectMdText -match "Multi-Module Clean Architecture") ".agent/PROJECT.md missing multi-module documentation"
+
+    $ModularCiText = Get-Content -Path (Join-Path $ModularTarget ".github/workflows/ci.yml") -Raw
+    Assert-Test "Modular: CI scans app/ core/ feature/" ($ModularCiText -match "app/ core/ feature/") "CI missing modular secret scanning paths"
 
 } finally {
     # Cleanup temporary test directory
