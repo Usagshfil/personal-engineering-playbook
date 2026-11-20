@@ -65,6 +65,11 @@ try {
     Assert-Test "Themes XML Generated" (Test-Path (Join-Path $LeanTarget "app/src/main/res/values/themes.xml")) "themes.xml missing"
     Assert-Test "Data Extraction Rules XML Generated" (Test-Path (Join-Path $LeanTarget "app/src/main/res/xml/data_extraction_rules.xml")) "data_extraction_rules.xml missing"
     Assert-Test "CI Workflow .github/workflows/ci.yml" (Test-Path (Join-Path $LeanTarget ".github/workflows/ci.yml")) "ci.yml missing"
+    $CiYmlPath = Join-Path $LeanTarget ".github/workflows/ci.yml"
+    if (Test-Path $CiYmlPath) {
+        $CiYmlContent = Get-Content -Path $CiYmlPath -Raw
+        Assert-Test "CI Workflow has chmod +x gradlew" ($CiYmlContent -match "chmod \+x gradlew") "Missing chmod +x gradlew in CI"
+    }
     
     # Verify optional files are NOT generated in lean mode
     Assert-Test "Lean: No .coderabbit.yaml" (-not (Test-Path (Join-Path $LeanTarget ".coderabbit.yaml"))) "Unexpected .coderabbit.yaml in lean mode"
@@ -122,12 +127,16 @@ try {
     Assert-Test "Skill: code-review" (Test-Path (Join-Path $FullAndroidTarget ".agent/skills/code-review/SKILL.md")) "code-review skill missing"
     Assert-Test "Skill: debugging" (Test-Path (Join-Path $FullAndroidTarget ".agent/skills/debugging/SKILL.md")) "debugging skill missing"
     Assert-Test "Skill: git-and-version-control" (Test-Path (Join-Path $FullAndroidTarget ".agent/skills/git-and-version-control/SKILL.md")) "git skill missing"
+    Assert-Test "Skill: deployment-and-release" (Test-Path (Join-Path $FullAndroidTarget ".agent/skills/deployment-and-release/SKILL.md")) "deployment skill missing"
+    Assert-Test "Skill: project-planning" (Test-Path (Join-Path $FullAndroidTarget ".agent/skills/project-planning/SKILL.md")) "planning skill missing"
 
     # 2.4 Specialized Agent Roles (.agent/roles/)
     Assert-Test "Role: coding-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/coding-agent.md")) "coding-agent missing"
     Assert-Test "Role: review-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/review-agent.md")) "review-agent missing"
     Assert-Test "Role: testing-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/testing-agent.md")) "testing-agent missing"
     Assert-Test "Role: debugging-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/debugging-agent.md")) "debugging-agent missing"
+    Assert-Test "Role: planning-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/planning-agent.md")) "planning-agent missing"
+    Assert-Test "Role: architecture-agent.md" (Test-Path (Join-Path $FullAndroidTarget ".agent/roles/architecture-agent.md")) "architecture-agent missing"
 
     # 2.5 Embedded Level 2 Android Standards (docs/standards/android/)
     Assert-Test "Tech Standard: Jetpack Compose" (Test-Path (Join-Path $FullAndroidTarget "docs/standards/android/02-jetpack-compose.md")) "compose guide missing"

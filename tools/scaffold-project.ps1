@@ -876,6 +876,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Verify Secret Defense (No Hardcoded Credentials)
         run: |
           echo "Scanning for accidental secret leaks..."
@@ -1040,7 +1043,12 @@ if ($IncludeAgentDocs) {
         "testing-and-qa",
         "code-review",
         "debugging",
-        "git-and-version-control"
+        "git-and-version-control",
+        "deployment-and-release",
+        "project-planning",
+        "requirement-engineering",
+        "system-architecture",
+        "security-review"
     )
     foreach ($Skill in $CoreSkills) {
         $SourceSkillDir = Join-Path $PlaybookRoot "05-skills/$Skill"
@@ -1058,7 +1066,11 @@ if ($IncludeAgentDocs) {
         "coding-agent.md",
         "review-agent.md",
         "testing-agent.md",
-        "debugging-agent.md"
+        "debugging-agent.md",
+        "planning-agent.md",
+        "architecture-agent.md",
+        "scrum-master-agent.md",
+        "documentation-agent.md"
     )
     foreach ($Role in $CoreRoles) {
         $SourceRole = Join-Path $PlaybookRoot "04-agents/roles/$Role"
