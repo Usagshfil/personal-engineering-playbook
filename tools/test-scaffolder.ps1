@@ -38,7 +38,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 1: Lean Android Mobile Profile (Default - Zero Bloat)
     # -------------------------------------------------------------
-    Write-Host "[1/9] Testing Lean Android Mobile Profile (Zero Bloat)..." -ForegroundColor Yellow
+    Write-Host "[1/10] Testing Lean Android Mobile Profile (Zero Bloat)..." -ForegroundColor Yellow
     $LeanTarget = Join-Path $TempBase "lean-android-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -57,7 +57,13 @@ try {
     Assert-Test "Copilot Rules copilot-instructions.md" (Test-Path (Join-Path $LeanTarget ".github/copilot-instructions.md")) "copilot-instructions.md missing"
     Assert-Test "Progress Tracking PROJECT_PROGRESS.md" (Test-Path (Join-Path $LeanTarget "PROJECT_PROGRESS.md")) "PROJECT_PROGRESS.md missing"
     Assert-Test "Version Catalog libs.versions.toml" (Test-Path (Join-Path $LeanTarget "gradle/libs.versions.toml")) "libs.versions.toml missing"
+    Assert-Test "Root settings.gradle.kts Generated" (Test-Path (Join-Path $LeanTarget "settings.gradle.kts")) "settings.gradle.kts missing"
+    Assert-Test "Root build.gradle.kts Generated" (Test-Path (Join-Path $LeanTarget "build.gradle.kts")) "root build.gradle.kts missing"
+    Assert-Test "Root gradle.properties Generated" (Test-Path (Join-Path $LeanTarget "gradle.properties")) "gradle.properties missing"
+    Assert-Test "Gradle Wrapper properties Generated" (Test-Path (Join-Path $LeanTarget "gradle/wrapper/gradle-wrapper.properties")) "gradle-wrapper.properties missing"
     Assert-Test "App build.gradle.kts" (Test-Path (Join-Path $LeanTarget "app/build.gradle.kts")) "app/build.gradle.kts missing"
+    Assert-Test "Themes XML Generated" (Test-Path (Join-Path $LeanTarget "app/src/main/res/values/themes.xml")) "themes.xml missing"
+    Assert-Test "Data Extraction Rules XML Generated" (Test-Path (Join-Path $LeanTarget "app/src/main/res/xml/data_extraction_rules.xml")) "data_extraction_rules.xml missing"
     Assert-Test "CI Workflow .github/workflows/ci.yml" (Test-Path (Join-Path $LeanTarget ".github/workflows/ci.yml")) "ci.yml missing"
     
     # Verify optional files are NOT generated in lean mode
@@ -71,7 +77,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 2: Fully-Loaded Android Profile with Modular Tooling
     # -------------------------------------------------------------
-    Write-Host "`n[2/9] Testing Fully-Loaded Android Profile with Modular Tooling..." -ForegroundColor Yellow
+    Write-Host "`n[2/10] Testing Fully-Loaded Android Profile with Modular Tooling..." -ForegroundColor Yellow
     $FullAndroidTarget = Join-Path $TempBase "full-android-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -150,7 +156,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 3: Modern Web Frontend Profile
     # -------------------------------------------------------------
-    Write-Host "`n[3/9] Testing Profile B: Modern Web Frontend..." -ForegroundColor Yellow
+    Write-Host "`n[3/10] Testing Profile B: Modern Web Frontend..." -ForegroundColor Yellow
     $WebTarget = Join-Path $TempBase "test-web-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -169,7 +175,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 4: Backend API Profile
     # -------------------------------------------------------------
-    Write-Host "`n[4/9] Testing Profile C: Backend API & Services..." -ForegroundColor Yellow
+    Write-Host "`n[4/10] Testing Profile C: Backend API & Services..." -ForegroundColor Yellow
     $BackendTarget = Join-Path $TempBase "test-backend-api"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -189,7 +195,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 5: Distributed Full-Stack Profile
     # -------------------------------------------------------------
-    Write-Host "`n[5/9] Testing Profile D: Distributed Full-Stack..." -ForegroundColor Yellow
+    Write-Host "`n[5/10] Testing Profile D: Distributed Full-Stack..." -ForegroundColor Yellow
     $FullStackTarget = Join-Path $TempBase "test-fullstack-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -208,7 +214,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 6: Safety Guard (Non-Empty Directory Overwrite Rejection)
     # -------------------------------------------------------------
-    Write-Host "`n[6/9] Testing Safety Guard (Non-Empty Directory Overwrite)..." -ForegroundColor Yellow
+    Write-Host "`n[6/10] Testing Safety Guard (Non-Empty Directory Overwrite)..." -ForegroundColor Yellow
     $SafetyFailedAsExpected = $false
     try {
         & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -224,7 +230,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 7: BaaS Supabase Scaffolding (-BaaS supabase)
     # -------------------------------------------------------------
-    Write-Host "`n[7/9] Testing BaaS: Supabase Scaffolding..." -ForegroundColor Yellow
+    Write-Host "`n[7/10] Testing BaaS: Supabase Scaffolding..." -ForegroundColor Yellow
     $SupabaseTarget = Join-Path $TempBase "test-supabase-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -255,7 +261,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 8: BaaS Firebase Scaffolding (-BaaS firebase)
     # -------------------------------------------------------------
-    Write-Host "`n[8/9] Testing BaaS: Firebase Scaffolding..." -ForegroundColor Yellow
+    Write-Host "`n[8/10] Testing BaaS: Firebase Scaffolding..." -ForegroundColor Yellow
     $FirebaseTarget = Join-Path $TempBase "test-firebase-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -286,7 +292,7 @@ try {
     # -------------------------------------------------------------
     # TEST CASE 9: BaaS Hybrid Scaffolding (-BaaS both)
     # -------------------------------------------------------------
-    Write-Host "`n[9/9] Testing BaaS: Hybrid (Both) Scaffolding..." -ForegroundColor Yellow
+    Write-Host "`n[9/10] Testing BaaS: Hybrid (Both) Scaffolding..." -ForegroundColor Yellow
     $BothTarget = Join-Path $TempBase "test-both-app"
     
     & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
@@ -300,6 +306,24 @@ try {
     Assert-Test "Both: Supabase migration exists" (Test-Path (Join-Path $BothTarget "supabase/migrations/0001_initial_schema.sql")) "Migration missing"
     Assert-Test "Both: Firebase json exists" (Test-Path (Join-Path $BothTarget "firebase.json")) "firebase.json missing"
     Assert-Test "Both: Both integration guides exist" ((Test-Path (Join-Path $BothTarget "docs/standards/android/SUPABASE_INTEGRATION.md")) -and (Test-Path (Join-Path $BothTarget "docs/standards/android/FIREBASE_INTEGRATION.md"))) "One or both guides missing"
+
+    # -------------------------------------------------------------
+    # TEST CASE 10: SkipBuildFiles Switch Verification
+    # -------------------------------------------------------------
+    Write-Host "`n[10/10] Testing SkipBuildFiles Switch..." -ForegroundColor Yellow
+    $SkipTarget = Join-Path $TempBase "test-skip-build"
+    
+    & powershell -ExecutionPolicy Bypass -File $ScaffolderScript `
+        -ProjectName "TestSkipBuild" `
+        -Profile "android" `
+        -TargetDir $SkipTarget `
+        -SkipBuildFiles `
+        -NonInteractive
+
+    Assert-Test "SkipBuild: Target Dir Created" (Test-Path $SkipTarget) "Dir not found"
+    Assert-Test "SkipBuild: No settings.gradle.kts" (-not (Test-Path (Join-Path $SkipTarget "settings.gradle.kts"))) "settings.gradle.kts should be skipped"
+    Assert-Test "SkipBuild: No root build.gradle.kts" (-not (Test-Path (Join-Path $SkipTarget "build.gradle.kts"))) "root build.gradle.kts should be skipped"
+    Assert-Test "SkipBuild: No gradle.properties" (-not (Test-Path (Join-Path $SkipTarget "gradle.properties"))) "gradle.properties should be skipped"
 
 } finally {
     # Cleanup temporary test directory

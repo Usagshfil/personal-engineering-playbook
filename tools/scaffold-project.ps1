@@ -30,6 +30,8 @@ param(
 
     [switch]$IncludeMintlify,
 
+    [switch]$SkipBuildFiles,
+
     [switch]$Force,
 
     [switch]$NonInteractive
@@ -534,7 +536,120 @@ switch ($Profile) {
         Ensure-Dir "app/src/test/java/$PackageDir"
         Ensure-Dir "app/src/androidTest/java/$PackageDir"
         Ensure-Dir "gradle"
+        Ensure-Dir "gradle/wrapper"
         Ensure-Dir "fastlane"
+        Ensure-Dir "app/src/main/res/values"
+        Ensure-Dir "app/src/main/res/xml"
+
+        if (-not $SkipBuildFiles) {
+            # Root settings.gradle.kts (Non-destructive check)
+            $SettingsPath = Join-Path $TargetFullPath "settings.gradle.kts"
+            if (-not (Test-Path $SettingsPath) -or $Force) {
+                $SettingsGradle = @'
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "{{PROJECT_NAME}}"
+include(":app")
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+                Write-TargetFile "settings.gradle.kts" $SettingsGradle
+            } else {
+                Write-InfoStep "Preserving existing settings.gradle.kts"
+            }
+
+            # Root build.gradle.kts (Non-destructive check)
+            $RootBuildPath = Join-Path $TargetFullPath "build.gradle.kts"
+            if (-not (Test-Path $RootBuildPath) -or $Force) {
+                $RootBuildGradle = @'
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.room) apply false
+}
+'@
+                Write-TargetFile "build.gradle.kts" $RootBuildGradle
+            } else {
+                Write-InfoStep "Preserving existing root build.gradle.kts"
+            }
+
+            # Root gradle.properties
+            $GradleProps = @'
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+kotlin.code.style=official
+android.nonTransitiveRClass=true
+'@
+            Write-TargetFile "gradle.properties" $GradleProps
+
+            # Gradle Wrapper Properties
+            $GradleWrapperProps = @'
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+'@
+            Write-TargetFile "gradle/wrapper/gradle-wrapper.properties" $GradleWrapperProps
+
+            # ProGuard Rules
+            $ProguardRules = @'
+# ProGuard / R8 rules for {{PROJECT_NAME}}
+# Add architecture and model preservation rules here.
+'@.Replace("{{PROJECT_NAME}}", $ProjectName)
+            Write-TargetFile "app/proguard-rules.pro" $ProguardRules
+
+            # Resource themes.xml and data_extraction_rules.xml
+            $ThemesXml = @'
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.App" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
+'@
+            Write-TargetFile "app/src/main/res/values/themes.xml" $ThemesXml
+
+            $DataExtractionXml = @'
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+    </device-transfer>
+</data-extraction-rules>
+'@
+            Write-TargetFile "app/src/main/res/xml/data_extraction_rules.xml" $DataExtractionXml
+        }
 
         # Version Catalogs
         $LibsVersionsToml = @"
